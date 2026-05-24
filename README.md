@@ -8,9 +8,11 @@ A hands-on PySide6 + QML learning workspace. Each sub-project is a standalone in
 
 ```
 Exploration/
-└── Layouts/
-    ├── GridLayout/       ← GridLayout explorer  (single window)
-    └── ColumnLayout/     ← ColumnLayout explorer (two windows)
+├── Layouts/
+│   ├── GridLayout/           ← GridLayout explorer      (single window)
+│   └── ColumnLayout/         ← ColumnLayout explorer    (two windows)
+└── Animations/
+    └── NumberAnimation/      ← Number animation explorer (two windows)
 ```
 
 ---
@@ -81,7 +83,37 @@ Two windows open automatically side by side. The Properties window stays on top.
 
 ---
 
-## Common Tips
+### `Animations/NumberAnimation` — Number Animation Explorer
+
+> Controls open in a **separate Properties window**. The playground fills the full screen showing four live demos plus an easing curve showcase strip.
+
+**Run:**
+```bash
+cd Animations/NumberAnimation
+python main.py
+```
+
+**Four demo tiles + easing showcase:**
+
+| Tile | Technique | What you see |
+|---|---|---|
+| A | `Behavior on property` | Box animates `x`, `opacity`, `rotation` on every change |
+| B | Standalone `NumberAnimation` | Ball controlled via Play / Pause / Stop / Restart |
+| C | State + `Transition` | Card scale/color/rotation driven by press states |
+| D | Python `Signal` → `Behavior` | Progress bar animates smoothly from Python value changes |
+| Strip | Easing showcase | 6 dots launched simultaneously, each with a different easing curve |
+
+**Controls panel covers:**
+
+| Section | Controls |
+|---|---|
+| 1 · Common Settings | Duration (50–5000 ms), Easing Type (22 curves), Loops (0 = ∞) |
+| 2 · Demo A | Toggle X, Toggle Opacity, Spin +90° |
+| 3 · Demo B | Play / Pause / Stop / Restart buttons |
+| 4 · Demo D | Randomize (Python signal) + value slider |
+| 5 · Easing Showcase | Showcase duration + Launch/Reset all dots |
+
+---
 
 - **Hover any cell** in the playground for a tooltip showing its live pixel position and size.
 - Each explorer has a **Reset All to Defaults** button to restore the initial state.
