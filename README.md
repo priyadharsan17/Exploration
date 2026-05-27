@@ -10,7 +10,8 @@ A hands-on PySide6 + QML learning workspace. Each sub-project is a standalone in
 Exploration/
 ├── Layouts/
 │   ├── GridLayout/               ← GridLayout explorer           (single window)
-│   └── ColumnLayout/             ← ColumnLayout explorer         (two windows)
+│   ├── ColumnLayout/             ← ColumnLayout explorer         (two windows)
+│   └── IDELayout/                ← IDE multi-panel layout        (single window)
 ├── Animations/
 │   ├── NumberAnimation/          ← Number animation explorer     (two windows)
 │   └── ListViewTransitions/      ← ListView transition explorer  (single window)
@@ -202,3 +203,53 @@ Starts with a seeded 6 × 5 employee table (Name · Department · Level · Salar
 | `HorizontalHeaderView` + `VerticalHeaderView` with `syncView` | `SmartTable.qml` |
 | Reusable QML component (`required property`, signals, public method) | `SmartTable.qml` |
 | Avoiding binding loops with `Qt.callLater` | Inline edit focus in `SmartTable.qml` |
+
+---
+
+### `Layouts/IDELayout` — IDE Multi-Panel Layout Explorer
+
+> Single window mimicking a real IDE: toolbar, activity bar, resizable side panel, tabbed editor, resizable bottom panel, and status bar — all panels draggable to resize with the mouse.
+
+**Run:**
+```bash
+cd Layouts/IDELayout
+python main.py
+```
+
+Opens a 1280 × 800 window (resizable, minimum 920 × 580).
+
+**Layout zones:**
+
+| Zone | What it is |
+|---|---|
+| Top toolbar | Menu bar simulation (File / Edit / View / Run / Terminal / Help) + search bar + Run / Debug buttons |
+| Activity bar | Narrow icon strip (left edge) — click to switch the side panel; click the active icon again to collapse/expand it |
+| Side panel | Resizable — shows one of four views depending on the active activity |
+| Main editor | Tabbed code viewer (three files); active tab highlighted with a top accent bar and an unsaved-change dot |
+| Bottom panel | Resizable — tabbed: Console (interactive input), Output, Problems, Terminal |
+| Status bar | Branch name, error/warning counts, language, encoding, cursor position |
+
+**Side panel views (activity bar):**
+
+| Icon | View | Content |
+|---|---|---|
+| ≡ | Explorer | File tree with depth-indented folders and colour-coded file names |
+| ⌕ | Search | Simulated search results with file name, line number, and matched text |
+| ▦ | Table | Four-column data grid (Name · Type · Size · Modified) |
+| 〰 | Timeline | Chronological event log with coloured dots and a vertical connector line |
+
+**Key QML concepts demonstrated:**
+
+| Concept | Where |
+|---|---|
+| `SplitView` (horizontal) | `mainSplit` — side panel vs editor+console |
+| `SplitView` (vertical) | `rightSplit` — editor area vs bottom panel |
+| `SplitView.preferredWidth/Height` | Default sizes for side panel and bottom panel |
+| `SplitView.minimumWidth/Height` | Prevents panels from collapsing below a usable size |
+| `SplitView.maximumWidth` | Caps side panel at 520 px |
+| `SplitView.fillWidth` / `fillHeight` | Marks the item that absorbs remaining space |
+| Custom `handle` delegate | `SplitHandle.hovered` / `SplitHandle.pressed` drive a colour `Behavior` |
+| Panel collapse via `visible: false` | Activity bar icon toggle hides the side panel; `SplitView` fills the gap |
+| `StackLayout` + tab bar | Switches content for both the side panel and the bottom panel |
+| `TextArea` inside `ScrollView` | Horizontally scrollable read-only code viewer |
+| `ListModel` + interactive `TextInput` | Console panel appends typed commands to the log |
