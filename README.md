@@ -11,9 +11,11 @@ Exploration/
 ├── Layouts/
 │   ├── GridLayout/               ← GridLayout explorer           (single window)
 │   └── ColumnLayout/             ← ColumnLayout explorer         (two windows)
-└── Animations/
-    ├── NumberAnimation/          ← Number animation explorer     (two windows)
-    └── ListViewTransitions/      ← ListView transition explorer  (single window)
+├── Animations/
+│   ├── NumberAnimation/          ← Number animation explorer     (two windows)
+│   └── ListViewTransitions/      ← ListView transition explorer  (single window)
+└── Tables/
+    └── TableExplorer/            ← Table CRUD explorer           (single window)
 ```
 
 ---
@@ -153,3 +155,50 @@ python main.py
 
 Click any list item to select it; click again to deselect. The ↑ / ↓ / × Selected buttons operate on the selected item.
 - Resize the playground window while controls are applied to see how constraints, fill, and alignment respond dynamically.
+
+---
+
+### `Tables/TableExplorer` — Table Explorer
+
+> Single window: live editable table on the left, controls panel on the right.  Covers `QAbstractTableModel`, cell CRUD, spreadsheet-style cell references, data extraction, and building a **reusable QML table component**.
+
+**Run:**
+```bash
+cd Tables/TableExplorer
+python main.py
+```
+
+Starts with a seeded 6 × 5 employee table (Name · Department · Level · Salary · Since).
+
+**Four files:**
+
+| File | Role |
+|---|---|
+| `table_backend.py` | `QAbstractTableModel` subclass — all data and CRUD logic |
+| `main.py` | Entry point — seeds data, exposes model as `tblModel` context property |
+| `SmartTable.qml` | Reusable component — headers, selection, inline editing |
+| `TableExplorer.qml` | Explorer window — two-panel layout + controls |
+
+**Controls panel:**
+
+| Section | Operations |
+|---|---|
+| Row Operations | Add Row, Remove Last Row, Remove Selected Row |
+| Column Operations | Add Col, Remove Last Col, Rename column header |
+| Cell Reference | Get / Set / Jump by `A1`-style reference; `→ Ref Input` from selection |
+| Data Extraction | Get Row N, Get Col N, Export as CSV (output panel) |
+| Table Settings | Editable toggle, Clear All Cells, Reset 6 × 5 |
+
+**Key concepts demonstrated:**
+
+| Concept | Where |
+|---|---|
+| `QAbstractTableModel` with all 5 required overrides | `table_backend.py` |
+| `@Slot` methods callable from QML | Every CRUD method |
+| `@Property(notify=signal)` for live QML bindings | `rows`, `cols` properties |
+| `beginInsertRows` / `endInsertRows` (and column equivalents) | `addRow`, `addColumn` |
+| `dataChanged`, `headerDataChanged`, `beginResetModel` signals | `setData`, `setColumnHeader`, `resetTable` |
+| `TableView` delegate with `required property string display` | `SmartTable.qml` |
+| `HorizontalHeaderView` + `VerticalHeaderView` with `syncView` | `SmartTable.qml` |
+| Reusable QML component (`required property`, signals, public method) | `SmartTable.qml` |
+| Avoiding binding loops with `Qt.callLater` | Inline edit focus in `SmartTable.qml` |
