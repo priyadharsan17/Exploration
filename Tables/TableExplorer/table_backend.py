@@ -107,6 +107,18 @@ class TableModel(QAbstractTableModel):
             return Qt.NoItemFlags
         return Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsEditable
 
+    # ── Count helpers (explicitly @Slot so they are callable from QML JS) ────
+
+    @Slot(result=int)
+    def getRowCount(self) -> int:
+        """Returns the current number of rows. Callable from QML."""
+        return self.rowCount()
+
+    @Slot(result=int)
+    def getColCount(self) -> int:
+        """Returns the current number of columns. Callable from QML."""
+        return self.columnCount()
+
     # ── Row CRUD ──────────────────────────────────────────────────────
 
     @Slot()
@@ -119,7 +131,7 @@ class TableModel(QAbstractTableModel):
         self.structureChanged.emit()
 
     @Slot(int)
-    def removeRow(self, row: int):
+    def deleteRow(self, row: int):
         """Delete the row at index *row*."""
         if 0 <= row < self.rowCount():
             self.beginRemoveRows(QModelIndex(), row, row)
@@ -141,7 +153,7 @@ class TableModel(QAbstractTableModel):
         self.structureChanged.emit()
 
     @Slot(int)
-    def removeColumn(self, col: int):
+    def deleteColumn(self, col: int):
         """Delete the column at index *col*."""
         if 0 <= col < self.columnCount():
             self.beginRemoveColumns(QModelIndex(), col, col)

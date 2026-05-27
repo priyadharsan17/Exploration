@@ -115,10 +115,11 @@ ApplicationWindow {
                     }
                     Text {
                         anchors.centerIn: parent
-                        // tblModel.rows / tblModel.cols are @Property(notify=structureChanged)
-                        // so this binding auto-updates on every structural change
-                        text: "SmartTable  \u00b7  " + (tblModel ? tblModel.rows : "?") +
-                              " rows  \u00d7  " + (tblModel ? tblModel.cols : "?") + " cols"
+                        text: {
+                            let r = tblModel ? tblModel.rows : 0
+                            let c = tblModel ? tblModel.cols : 0
+                            return "SmartTable  \u00b7  " + r + " rows  \u00d7  " + c + " cols"
+                        }
                         font.family: "Consolas"; font.pixelSize: 12; font.bold: true
                         color: root.accent
                     }
@@ -209,11 +210,11 @@ ApplicationWindow {
                             ActionBtn {
                                 text: "× Last Row"; btnColor: root.clrRed
                                 onClicked: {
-                                    let r = tblModel.rows - 1
+                                    let r = tblModel.getRowCount() - 1
                                     if (r >= 0) {
-                                        tblModel.removeRow(r)
-                                        root.lastOp = "removeRow(" + r + ")  →  last row deleted"
-                                        if (smartTable.selectedRow >= tblModel.rows)
+                                        tblModel.deleteRow(r)
+                                        root.lastOp = "deleteRow(" + r + ")  \u2192  last row deleted"
+                                        if (smartTable.selectedRow >= tblModel.getRowCount())
                                             smartTable.selectedRow = -1
                                     }
                                 }
@@ -224,8 +225,8 @@ ApplicationWindow {
                                 opacity: enabled ? 1.0 : 0.45
                                 onClicked: {
                                     let r = smartTable.selectedRow
-                                    tblModel.removeRow(r)
-                                    root.lastOp = "removeRow(" + r + ")  →  selected row deleted"
+                                    tblModel.deleteRow(r)
+                                    root.lastOp = "deleteRow(" + r + ")  \u2192  selected row deleted"
                                     smartTable.selectedRow = -1
                                     smartTable.selectedCol = -1
                                 }
@@ -248,11 +249,11 @@ ApplicationWindow {
                             ActionBtn {
                                 text: "× Last Col"; btnColor: root.clrRed
                                 onClicked: {
-                                    let c = tblModel.cols - 1
+                                    let c = tblModel.getColCount() - 1
                                     if (c >= 0) {
-                                        tblModel.removeColumn(c)
-                                        root.lastOp = "removeColumn(" + c + ")  →  last column deleted"
-                                        if (smartTable.selectedCol >= tblModel.cols)
+                                        tblModel.deleteColumn(c)
+                                        root.lastOp = "deleteColumn(" + c + ")  \u2192  last column deleted"
+                                        if (smartTable.selectedCol >= tblModel.getColCount())
                                             smartTable.selectedCol = -1
                                     }
                                 }
@@ -376,10 +377,11 @@ ApplicationWindow {
                                 Layout.alignment: Qt.AlignVCenter
                             }
                             Text {
-                                text: (smartTable.selectedRow >= 0 && tblModel)
-                                    ? tblModel.cellRef(smartTable.selectedRow,
-                                                         smartTable.selectedCol)
-                                    : "—"
+                                text: {
+                                    if (!tblModel || smartTable.selectedRow < 0) return "\u2014"
+                                    return tblModel.cellRef(smartTable.selectedRow,
+                                                            smartTable.selectedCol)
+                                }
                                 font.family: "Consolas"; font.pixelSize: 13; font.bold: true
                                 color: root.accent
                                 Layout.alignment: Qt.AlignVCenter
