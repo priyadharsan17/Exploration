@@ -9,10 +9,11 @@ A hands-on PySide6 + QML learning workspace. Each sub-project is a standalone in
 ```
 Exploration/
 ├── Layouts/
-│   ├── GridLayout/           ← GridLayout explorer      (single window)
-│   └── ColumnLayout/         ← ColumnLayout explorer    (two windows)
+│   ├── GridLayout/               ← GridLayout explorer           (single window)
+│   └── ColumnLayout/             ← ColumnLayout explorer         (two windows)
 └── Animations/
-    └── NumberAnimation/      ← Number animation explorer (two windows)
+    ├── NumberAnimation/          ← Number animation explorer     (two windows)
+    └── ListViewTransitions/      ← ListView transition explorer  (single window)
 ```
 
 ---
@@ -118,4 +119,37 @@ python main.py
 - **Hover any cell** in the playground for a tooltip showing its live pixel position and size.
 - Each explorer has a **Reset All to Defaults** button to restore the initial state.
 - The **live status box** at the bottom of every Properties panel reflects the current property values in real time.
+
+---
+
+### `Animations/ListViewTransitions` — ListView Transition Explorer
+
+> Single window: ListView on the left, controls + legend on the right. Status bar at the bottom shows exactly which transition fired and why after every action.
+
+**Run:**
+```bash
+cd Animations/ListViewTransitions
+python main.py
+```
+
+**Five transitions demonstrated:**
+
+| Transition | Visual effect | Triggered by |
+|---|---|---|
+| `populate` | Slide in from left + fade | Model assigned (or reassigned) to the view |
+| `add` | Scale up from 0 + fade in | `ListModel.insert()` / `append()` |
+| `remove` | Fly off to the right + fade out | `ListModel.remove()` / `clear()` |
+| `displaced` | Spring to new slot (`OutBack`) | Items that *shift* due to another item's add/remove/move |
+| `move` | Smooth slide (`InOutQuad`) | `ListModel.move()` (explicit reorder) |
+
+**Controls:**
+
+| Section | Buttons |
+|---|---|
+| Add Items | + Top, + Bottom, + Random |
+| Remove Items | × Selected, × Top, × Bottom |
+| Reorder | ↑ Up, ↓ Down, Shuffle (Fisher-Yates) |
+| Reset | ↺ Replay Populate (re-triggers `populate`), ⌫ Clear All |
+
+Click any list item to select it; click again to deselect. The ↑ / ↓ / × Selected buttons operate on the selected item.
 - Resize the playground window while controls are applied to see how constraints, fill, and alignment respond dynamically.
