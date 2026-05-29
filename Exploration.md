@@ -72,7 +72,7 @@ Each entry links to the sub-project folder and notes the key concepts covered or
 
 | # | Sub-project | Status | Key Concepts |
 |---|---|---|---|
-| 11 | `Charts/ChartsExplorer` | 🔜 | `QtCharts`, `ChartView`, `LineSeries`, `BarSeries`, `PieSeries`, live data via Python timer, `QXYSeries.append` from Python |
+| 11 | `Charts/ChartsExplorer` | ✅ | `QtCharts`, `ChartView`, `LineSeries`, `BarSeries`, `PieSeries`, live data via Python timer, `QXYSeries.append` from Python |
 
 ---
 
@@ -80,7 +80,7 @@ Each entry links to the sub-project folder and notes the key concepts covered or
 
 | # | Sub-project | Status | Key Concepts |
 |---|---|---|---|
-| 12 | `Interaction/DragDropExplorer` | 💡 | `DragHandler`, `DropArea`, `Drag` attached properties, model reordering on drop (Kanban-style) |
+| 12 | `Interaction/DragDropExplorer` | 🔜 | `DragHandler`, `DropArea`, `Drag` attached properties, model reordering on drop (Kanban-style) |
 | 13 | `Interaction/CanvasExplorer`   | 💡 | `Canvas`, `Context2D`, drawing paths/shapes/text, `requestPaint`, animation loop |
 
 ---

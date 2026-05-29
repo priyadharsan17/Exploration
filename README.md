@@ -21,9 +21,11 @@ Exploration/
 │   └── TreeViewExplorer/         ← TreeView CRUD explorer        (single window)
 ├── Models/
 │   └── SortFilterExplorer/       ← SortFilter proxy explorer     (single window)
-└── Navigation/
-    ├── StackViewExplorer/        ← StackView navigation explorer (single window)
-    └── DrawerExplorer/           ← Drawer · SwipeView · TabBar explorer (single window)
+├── Navigation/
+│   ├── StackViewExplorer/        ← StackView navigation explorer (single window)
+│   └── DrawerExplorer/           ← Drawer · SwipeView · TabBar explorer (single window)
+└── Charts/
+    └── ChartsExplorer/           ← ChartView · Line · Bar · Pie + live Python data
 ```
 
 ---
@@ -432,3 +434,48 @@ python main.py
 | `SwipeView.interactive` toggle | Interactive ON/OFF button |
 | `SwipeView` page attached properties (`isCurrentItem`, `index`) | Page delegates |
 | Hamburger + TabBar + Drawer converging on one index | Full navigation pattern |
+
+---
+
+### `Charts/ChartsExplorer` — Charts Explorer
+
+Hands-on explorer for **custom Canvas 2D charts** — Line, Bar, and Pie/Donut drawn entirely with QML `Canvas` and the 2D drawing API. Live data is fed from a Python `QTimer` via signals. No `QtCharts` dependency.
+
+```bash
+cd Charts/ChartsExplorer
+python main.py
+```
+
+**Three files:**
+
+| File | Role |
+|---|---|
+| `charts_backend.py` | `ChartsBackend(QObject)` — `QTimer` emitting `newLinePoint(x, y)` and `resetLineSeries()` |
+| `main.py` | Entry point — exposes `backend` as context property |
+| `ChartsExplorer.qml` | Three `Canvas` chart items (Line / Bar / Pie) in a `StackLayout`, chart selector, control panel |
+
+**Controls panel:**
+
+| Chart | Section | Operations |
+|---|---|---|
+| Line | Live Data | Start / Stop Python timer, Reset series |
+| Line | Interval | Slider 100–2000 ms → `backend.setInterval(ms)` |
+| Line | Visibility | Toggle live series / reference sine wave |
+| Bar | Bar Sets | Randomize A, Randomize B, Reset — reassign JS array + `requestPaint()` |
+| Bar | Visibility | Toggle `showA` / `showB` + `requestPaint()` |
+| Pie | Slices | Explode all, Collapse all (via `explodedSet` JS object) |
+| Pie | Hole size | Slider 0–0.7 turns pie into a donut |
+
+**Key concepts demonstrated:**
+
+| Concept | Where |
+|---|---|
+| Python signal → `Connections` → JS array push + `requestPaint()` | `Connections` block + `lineCanvas` |
+| Sliding window: `splice(0, 1)` when array length > 60 | `onNewLinePoint` handler |
+| Bezier curve smoothing for the reference sine wave | `bezierCurveTo(cpx, …)` in `lineCanvas.onPaint` |
+| `Canvas.onPaint` coordinate helpers (`toX`, `toY`) | All three canvases |
+| `onWidthChanged` / `onHeightChanged: requestPaint()` | Responsive repaint on resize |
+| Bar width computed from active series count | `barCanvas.onPaint` |
+| Pie hit-testing: `Math.atan2` + sweep accumulation | `MouseArea.onClicked` in pie chart |
+| Donut cutout via counter-clockwise `ctx.arc()` | `pieCanvas.onPaint` when `holeSize > 0` |
+| Slice explosion via `explodedSet` JS object (`Object.assign` copy-on-write) | Explode All / click handler |
