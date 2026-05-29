@@ -64,7 +64,7 @@ Each entry links to the sub-project folder and notes the key concepts covered or
 | # | Sub-project | Status | Key Concepts |
 |---|---|---|---|
 | 9  | `Navigation/StackViewExplorer`  | ✅ | `StackView`, `push`/`pop`/`replace`, `StackView.Transition`, page lifecycle (`Component.onCompleted`, `StackView.onActivated`) |
-| 10 | `Navigation/DrawerExplorer`     | 🔜 | `Drawer`, `SwipeView`, `TabBar`, navigation drawer pattern |
+| 10 | `Navigation/DrawerExplorer`     | ✅ | `Drawer`, `SwipeView`, `TabBar`, navigation drawer pattern |
 
 ---
 
@@ -72,7 +72,7 @@ Each entry links to the sub-project folder and notes the key concepts covered or
 
 | # | Sub-project | Status | Key Concepts |
 |---|---|---|---|
-| 11 | `Charts/ChartsExplorer` | 💡 | `QtCharts`, `ChartView`, `LineSeries`, `BarSeries`, `PieSeries`, live data via Python timer, `QXYSeries.append` from Python |
+| 11 | `Charts/ChartsExplorer` | 🔜 | `QtCharts`, `ChartView`, `LineSeries`, `BarSeries`, `PieSeries`, live data via Python timer, `QXYSeries.append` from Python |
 
 ---
 

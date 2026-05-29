@@ -22,7 +22,8 @@ Exploration/
 ├── Models/
 │   └── SortFilterExplorer/       ← SortFilter proxy explorer     (single window)
 └── Navigation/
-    └── StackViewExplorer/        ← StackView navigation explorer (single window)
+    ├── StackViewExplorer/        ← StackView navigation explorer (single window)
+    └── DrawerExplorer/           ← Drawer · SwipeView · TabBar explorer (single window)
 ```
 
 ---
@@ -390,3 +391,44 @@ python main.py
 | `StackView.index`, `StackView.status` | Displayed inside each page |
 | `Component.onCompleted` / `onDestruction` | Console log in every page |
 | Passing initial properties via `push(comp, {key: val})` | Page D `pageTitle` property |
+
+---
+
+### `Navigation/DrawerExplorer` — Drawer · SwipeView · TabBar Explorer
+
+Hands-on explorer for `Drawer`, `SwipeView`, and `TabBar` — three complementary Qt Quick navigation surfaces.
+
+```bash
+cd Navigation/DrawerExplorer
+python main.py
+```
+
+**Two files:**
+
+| File | Role |
+|---|---|
+| `main.py` | Entry point — `QGuiApplication` + `QQmlApplicationEngine` (pure QML) |
+| `DrawerExplorer.qml` | Hamburger app bar, `Drawer` nav panel, `TabBar`, `SwipeView` (4 pages), control panel |
+
+**Controls panel:**
+
+| Section | Operations |
+|---|---|
+| Drawer | Open / Close, edge (Left / Bottom), modal toggle |
+| SwipeView | Jump to any page, interactive (swipe) toggle |
+| Live Info | Real-time readout of `position`, `currentIndex`, `count`, `modal`, `edge` |
+
+**Key concepts demonstrated:**
+
+| Concept | Where |
+|---|---|
+| `Drawer.open()` / `close()` | Hamburger button + panel buttons |
+| `Drawer.edge` changed at runtime | Edge selector in panel |
+| `Drawer.modal` on/off | Modal toggle |
+| `Drawer.position` (0.0 – 1.0) animated | Drawer footer + live info |
+| `Overlay.modal` custom dim colour | Drawer `Overlay.modal: Rectangle {...}` |
+| `SwipeView.currentIndex` as single source of truth | Tabs, drawer items, and panel all write to it |
+| `TabBar` underline animated with `Behavior on width` | TabButton background |
+| `SwipeView.interactive` toggle | Interactive ON/OFF button |
+| `SwipeView` page attached properties (`isCurrentItem`, `index`) | Page delegates |
+| Hamburger + TabBar + Drawer converging on one index | Full navigation pattern |
