@@ -19,8 +19,10 @@ Exploration/
 │   └── TableExplorer/            ← Table CRUD explorer           (single window)
 ├── Trees/
 │   └── TreeViewExplorer/         ← TreeView CRUD explorer        (single window)
-└── Models/
-    └── SortFilterExplorer/       ← SortFilter proxy explorer     (single window)
+├── Models/
+│   └── SortFilterExplorer/       ← SortFilter proxy explorer     (single window)
+└── Navigation/
+    └── StackViewExplorer/        ← StackView navigation explorer (single window)
 ```
 
 ---
@@ -347,3 +349,44 @@ Starts with 23 seeded tech-ecosystem items across five categories, sorted by nam
 | `filteredCount` / `totalCount` as `@Property(notify=)` bindings | Header stats bar |
 | `mapToSource(self.index(proxy_row, 0))` for proxy → source deletion | `removeProxyRow` |
 | `Repeater` for dynamic pill button groups | Category filter + Add Item picker |
+
+---
+
+### `Navigation/StackViewExplorer` — StackView Explorer
+
+Hands-on explorer for `StackView` — Qt Quick's push-down navigation stack.
+
+```bash
+cd Navigation/StackViewExplorer
+python main.py
+```
+
+**Two files:**
+
+| File | Role |
+|---|---|
+| `main.py` | Entry point — `QGuiApplication` + `QQmlApplicationEngine` (pure QML, no Python backend needed) |
+| `StackViewExplorer.qml` | Four named pages, six-transition system, right control panel, live stack info |
+
+**Controls panel:**
+
+| Section | Operations |
+|---|---|
+| Navigation | Push pages A–D onto the stack; Page D accepts initial properties |
+| Pop / Replace | Pop one, pop to root (`pop(null)`), replace current page, clear stack |
+| Transitions | Switch among Slide / Fade / Scale / None at runtime |
+| Stack Info | Live readout of `depth`, `currentItem`, and `busy` |
+
+**Key concepts demonstrated:**
+
+| Concept | Where |
+|---|---|
+| `StackView.push(component, props)` | Panel buttons + in-page buttons |
+| `StackView.pop()` / `pop(null)` | Pop and pop-to-root buttons |
+| `StackView.replace(component)` | Replace button (no back entry) |
+| `StackView.clear()` | Clear button (resets to Page A) |
+| `pushEnter/Exit`, `popEnter/Exit`, `replaceEnter/Exit` | Transition preset selector |
+| `StackView.onActivated` / `StackView.onDeactivated` | Every page; drives status bar |
+| `StackView.index`, `StackView.status` | Displayed inside each page |
+| `Component.onCompleted` / `onDestruction` | Console log in every page |
+| Passing initial properties via `push(comp, {key: val})` | Page D `pageTitle` property |
