@@ -67,6 +67,26 @@
 
     .site-header .logo svg { flex-shrink: 0; }
 
+    .header-nav {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-left: 16px;
+    }
+
+    .header-nav a {
+      padding: 5px 12px;
+      border-radius: 7px;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      transition: background var(--transition), color var(--transition);
+    }
+
+    .header-nav a:hover { background: var(--tag-bg); color: var(--text); text-decoration: none; }
+    .header-nav a.active { background: rgba(88,166,255,0.12); color: var(--accent); }
+
+    @media (max-width: 700px) { .header-nav { display: none; } }
+
     .header-search {
       margin-left: auto;
       position: relative;
@@ -669,6 +689,10 @@
     </svg>
     PySide6 + QML Exploration
   </div>
+  <nav class="header-nav">
+    <a href="index.html" class="active">Explorers</a>
+    <a href="guidelines.html">Guidelines</a>
+  </nav>
   <div class="header-search">
     <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
     <input type="search" id="globalSearch" placeholder="Search concepts, components…" autocomplete="off" />
@@ -730,6 +754,11 @@
   <div class="nav-section-label">Roadmap</div>
   <a class="nav-link" href="#roadmap" data-section="roadmap">
     <span class="nav-icon">🗺️</span> Coming Up
+  </a>
+
+  <div class="nav-section-label">Guides</div>
+  <a class="nav-link" href="guidelines.html">
+    <span class="nav-icon">📖</span> Developer Guidelines
   </a>
 </nav>
 

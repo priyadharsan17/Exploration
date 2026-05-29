@@ -1,0 +1,1595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Developer Guidelines · PySide6 + QML</title>
+  <style>
+    /* ── Reset & Base ─────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:         #0d1117;
+      --bg-card:    #161b22;
+      --bg-sidebar: #0d1117;
+      --border:     #30363d;
+      --accent:     #58a6ff;
+      --accent2:    #bc8cff;
+      --accent3:    #3fb950;
+      --accent4:    #f78166;
+      --accent5:    #ffa657;
+      --accent6:    #79c0ff;
+      --text:       #e6edf3;
+      --text-muted: #8b949e;
+      --tag-bg:     #21262d;
+      --radius:     10px;
+      --sidebar-w:  268px;
+      --header-h:   60px;
+      --transition: 0.2s ease;
+      --code-bg:    #0d1117;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+    }
+
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* ── Header ─────────────────────────────────────────────────────── */
+    .site-header {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: var(--header-h);
+      background: rgba(13,17,23,0.93);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 24px;
+      gap: 16px;
+      z-index: 100;
+    }
+
+    .site-header .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 1.05rem;
+      color: var(--text);
+      white-space: nowrap;
+    }
+
+    .header-nav {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-left: 16px;
+    }
+
+    .header-nav a {
+      padding: 5px 12px;
+      border-radius: 7px;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      transition: background var(--transition), color var(--transition);
+    }
+
+    .header-nav a:hover { background: var(--tag-bg); color: var(--text); text-decoration: none; }
+    .header-nav a.active { background: rgba(88,166,255,0.12); color: var(--accent); }
+
+    .hamburger {
+      display: none;
+      background: none;
+      border: none;
+      color: var(--text);
+      cursor: pointer;
+      padding: 4px;
+    }
+
+    .header-right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+
+    .btn-ghost {
+      display: flex; align-items: center; gap: 6px;
+      padding: 6px 14px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 0.8rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background var(--transition), border-color var(--transition);
+      white-space: nowrap;
+    }
+
+    .btn-ghost:hover { background: #21262d; border-color: var(--accent); text-decoration: none; }
+
+    /* ── Layout ──────────────────────────────────────────────────────── */
+    .layout {
+      display: flex;
+      min-height: 100vh;
+      padding-top: var(--header-h);
+    }
+
+    /* ── Sidebar ─────────────────────────────────────────────────────── */
+    .sidebar {
+      position: fixed;
+      top: var(--header-h);
+      left: 0;
+      bottom: 0;
+      width: var(--sidebar-w);
+      background: var(--bg-sidebar);
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+      padding: 20px 0 40px;
+      transition: transform var(--transition);
+      z-index: 90;
+    }
+
+    .sidebar::-webkit-scrollbar { width: 4px; }
+    .sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+    .nav-section-label {
+      padding: 6px 20px 4px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-top: 16px;
+    }
+
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 7px 20px;
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: background var(--transition), color var(--transition);
+      border-left: 2px solid transparent;
+      line-height: 1.4;
+    }
+
+    .nav-link:hover { background: rgba(88,166,255,0.07); color: var(--text); text-decoration: none; }
+    .nav-link.active { background: rgba(88,166,255,0.1); color: var(--accent); border-left-color: var(--accent); }
+    .nav-link .nav-icon { font-size: 1rem; line-height: 1; }
+
+    .sidebar-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      z-index: 89;
+    }
+
+    /* ── Main Content ────────────────────────────────────────────────── */
+    .main {
+      margin-left: var(--sidebar-w);
+      flex: 1;
+      padding: 48px 56px 100px;
+      max-width: calc(var(--sidebar-w) + 900px);
+    }
+
+    /* ── Page Hero ───────────────────────────────────────────────────── */
+    .page-hero {
+      margin-bottom: 48px;
+      padding-bottom: 32px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .page-hero .breadcrumb {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .page-hero h1 {
+      font-size: 2.2rem;
+      font-weight: 800;
+      line-height: 1.2;
+      margin-bottom: 12px;
+      background: linear-gradient(135deg, #e6edf3 0%, var(--accent) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .page-hero p {
+      font-size: 1rem;
+      color: var(--text-muted);
+      max-width: 640px;
+      line-height: 1.7;
+    }
+
+    /* ── Guide Section ───────────────────────────────────────────────── */
+    .guide-section {
+      margin-bottom: 56px;
+      scroll-margin-top: calc(var(--header-h) + 20px);
+    }
+
+    .guide-section h2 {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 6px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .guide-section h2 .section-num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: rgba(88,166,255,0.15);
+      color: var(--accent);
+      font-size: 0.8rem;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .guide-section .section-intro {
+      font-size: 0.92rem;
+      color: var(--text-muted);
+      margin-bottom: 24px;
+      line-height: 1.75;
+    }
+
+    .guide-section h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text);
+      margin: 28px 0 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .guide-section h3::before {
+      content: "";
+      display: inline-block;
+      width: 3px; height: 16px;
+      background: var(--accent);
+      border-radius: 2px;
+    }
+
+    .guide-section p {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      line-height: 1.8;
+      margin-bottom: 12px;
+    }
+
+    .guide-section ul, .guide-section ol {
+      padding-left: 22px;
+      margin-bottom: 14px;
+    }
+
+    .guide-section li {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      line-height: 1.8;
+      margin-bottom: 4px;
+    }
+
+    .guide-section li strong { color: var(--text); font-weight: 600; }
+
+    /* ── Code blocks ─────────────────────────────────────────────────── */
+    pre {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 20px;
+      overflow-x: auto;
+      font-size: 0.82rem;
+      line-height: 1.65;
+      margin: 12px 0 20px;
+      position: relative;
+    }
+
+    pre code {
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      color: var(--text);
+      background: none;
+      padding: 0;
+    }
+
+    code {
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      font-size: 0.83em;
+      background: var(--tag-bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 1px 5px;
+      color: var(--accent2);
+    }
+
+    pre code { border: none; background: none; padding: 0; color: inherit; font-size: inherit; }
+
+    /* syntax colour helpers — applied via classes in code */
+    .kw  { color: #ff7b72; }   /* keyword */
+    .fn  { color: #d2a8ff; }   /* function / decorator */
+    .st  { color: #a5d6ff; }   /* string */
+    .cm  { color: #8b949e; font-style: italic; } /* comment */
+    .nu  { color: #79c0ff; }   /* number / type */
+    .qml { color: #ffa657; }   /* QML property / id */
+    .py  { color: #3fb950; }   /* Python value */
+
+    .pre-label {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      padding: 7px 14px 6px;
+      background: #161b22;
+      border: 1px solid var(--border);
+      border-bottom: none;
+      border-radius: 8px 8px 0 0;
+      margin-top: 14px;
+    }
+
+    .pre-label + pre {
+      margin-top: 0;
+      border-radius: 0 0 8px 8px;
+    }
+
+    .copy-code {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 0.72rem;
+      padding: 2px 8px;
+      border-radius: 4px;
+      transition: color var(--transition), background var(--transition);
+      font-family: inherit;
+    }
+
+    .copy-code:hover { color: var(--text); background: var(--tag-bg); }
+
+    /* ── Diagram / Architecture box ──────────────────────────────────── */
+    .arch-diagram {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 24px 28px;
+      margin: 16px 0 24px;
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      font-size: 0.8rem;
+      line-height: 1.9;
+      overflow-x: auto;
+      color: var(--text-muted);
+    }
+
+    .arch-diagram .layer-label { color: var(--accent); font-weight: 700; }
+    .arch-diagram .arrow { color: var(--accent3); }
+    .arch-diagram .box { color: var(--text); }
+    .arch-diagram .note { color: #8b949e; font-style: italic; }
+
+    /* ── Info / warning callout ──────────────────────────────────────── */
+    .callout {
+      border-radius: 8px;
+      padding: 14px 18px;
+      margin: 16px 0;
+      display: flex;
+      gap: 12px;
+      font-size: 0.87rem;
+      line-height: 1.65;
+    }
+
+    .callout-icon { font-size: 1.1rem; flex-shrink: 0; margin-top: 1px; }
+    .callout-body { flex: 1; }
+    .callout-body strong { display: block; margin-bottom: 4px; font-size: 0.85rem; }
+    .callout-body p { margin: 0; color: inherit; font-size: inherit; line-height: inherit; }
+
+    .callout-info    { background: rgba(88,166,255,0.08);  border: 1px solid rgba(88,166,255,0.25);  color: #a8c8f8; }
+    .callout-tip     { background: rgba(63,185,80,0.08);   border: 1px solid rgba(63,185,80,0.25);   color: #88d99a; }
+    .callout-warn    { background: rgba(255,166,87,0.08);  border: 1px solid rgba(255,166,87,0.25);  color: #f5c57a; }
+    .callout-danger  { background: rgba(247,129,102,0.08); border: 1px solid rgba(247,129,102,0.25); color: #f0a090; }
+
+    /* ── Comparison table ────────────────────────────────────────────── */
+    .compare-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+      margin: 14px 0 20px;
+    }
+
+    .compare-table th {
+      text-align: left;
+      padding: 9px 14px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+    }
+
+    .compare-table td {
+      padding: 9px 14px;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      line-height: 1.6;
+      vertical-align: top;
+    }
+
+    .compare-table td:first-child {
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      color: var(--accent2);
+      white-space: nowrap;
+      background: rgba(188,140,255,0.04);
+    }
+
+    .compare-table tr:hover td { background: rgba(255,255,255,0.015); }
+
+    /* ── Do / Don't columns ──────────────────────────────────────────── */
+    .do-dont {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin: 14px 0 22px;
+    }
+
+    .do-dont .do   { border-top: 3px solid var(--accent3); }
+    .do-dont .dont { border-top: 3px solid var(--accent4); }
+
+    .do-dont > div {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .do-dont .label {
+      padding: 6px 14px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .do   .label { color: var(--accent3); }
+    .dont .label { color: var(--accent4); }
+
+    .do-dont pre {
+      margin: 0;
+      border: none;
+      border-radius: 0;
+      background: transparent;
+    }
+
+    /* ── Back to top ─────────────────────────────────────────────────── */
+    .back-top {
+      position: fixed;
+      bottom: 28px;
+      right: 28px;
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: var(--bg);
+      border: none;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem;
+      box-shadow: 0 4px 16px rgba(88,166,255,0.35);
+      opacity: 0;
+      transform: translateY(10px);
+      transition: opacity var(--transition), transform var(--transition);
+      z-index: 80;
+    }
+
+    .back-top.visible { opacity: 1; transform: translateY(0); }
+
+    /* ── Footer ──────────────────────────────────────────────────────── */
+    .site-footer {
+      margin-left: var(--sidebar-w);
+      border-top: 1px solid var(--border);
+      padding: 22px 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    /* ── Responsive ──────────────────────────────────────────────────── */
+    @media (max-width: 900px) {
+      .sidebar { transform: translateX(-100%); }
+      .sidebar.open { transform: translateX(0); }
+      .sidebar-overlay.open { display: block; }
+      .main { margin-left: 0; max-width: 100%; padding: 24px 20px 60px; }
+      .site-footer { margin-left: 0; padding: 20px; }
+      .hamburger { display: flex; }
+      .page-hero h1 { font-size: 1.7rem; }
+      .do-dont { grid-template-columns: 1fr; }
+      .header-nav { display: none; }
+    }
+
+    @media (max-width: 600px) {
+      .main { padding: 20px 16px 60px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Header -->
+<header class="site-header">
+  <button class="hamburger" id="hamburger" aria-label="Toggle navigation">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+  </button>
+  <div class="logo">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#58a6ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
+    </svg>
+    PySide6 + QML
+  </div>
+  <nav class="header-nav">
+    <a href="index.html">Explorers</a>
+    <a href="guidelines.html" class="active">Guidelines</a>
+  </nav>
+  <div class="header-right">
+    <a class="btn-ghost" href="https://github.com/priyadharsan17/Exploration" target="_blank" rel="noopener">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+      GitHub
+    </a>
+  </div>
+</header>
+
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<!-- Sidebar -->
+<nav class="sidebar" id="sidebar">
+  <div class="nav-section-label">Overview</div>
+  <a class="nav-link" href="#mental-model" data-section="mental-model">
+    <span class="nav-icon">🧠</span> Mental Model
+  </a>
+  <a class="nav-link" href="#architecture" data-section="architecture">
+    <span class="nav-icon">🏗️</span> Architecture
+  </a>
+
+  <div class="nav-section-label">Communication</div>
+  <a class="nav-link" href="#exposing" data-section="exposing">
+    <span class="nav-icon">🔌</span> Exposing Python to QML
+  </a>
+  <a class="nav-link" href="#signals-slots" data-section="signals-slots">
+    <span class="nav-icon">⚡</span> Signals &amp; Slots
+  </a>
+  <a class="nav-link" href="#properties" data-section="properties">
+    <span class="nav-icon">🔗</span> Reactive Properties
+  </a>
+
+  <div class="nav-section-label">QML Patterns</div>
+  <a class="nav-link" href="#ux-design" data-section="ux-design">
+    <span class="nav-icon">🎨</span> UI/UX Design in QML
+  </a>
+  <a class="nav-link" href="#layouts-guide" data-section="layouts-guide">
+    <span class="nav-icon">🔲</span> Layouts &amp; Anchors
+  </a>
+  <a class="nav-link" href="#components" data-section="components">
+    <span class="nav-icon">🧩</span> Components &amp; Reuse
+  </a>
+  <a class="nav-link" href="#models-views" data-section="models-views">
+    <span class="nav-icon">📦</span> Models &amp; Views
+  </a>
+  <a class="nav-link" href="#states" data-section="states">
+    <span class="nav-icon">🔄</span> States &amp; Transitions
+  </a>
+
+  <div class="nav-section-label">Backend Patterns</div>
+  <a class="nav-link" href="#model-types" data-section="model-types">
+    <span class="nav-icon">🗃️</span> Model Types
+  </a>
+  <a class="nav-link" href="#threading" data-section="threading">
+    <span class="nav-icon">🧵</span> Threading
+  </a>
+
+  <div class="nav-section-label">Pitfalls</div>
+  <a class="nav-link" href="#pitfalls" data-section="pitfalls">
+    <span class="nav-icon">⚠️</span> Common Pitfalls
+  </a>
+  <a class="nav-link" href="#checklist" data-section="checklist">
+    <span class="nav-icon">✅</span> Dev Checklist
+  </a>
+</nav>
+
+<!-- Main -->
+<main class="main">
+
+  <div class="page-hero">
+    <div class="breadcrumb">
+      <a href="index.html">Explorers</a>
+      <span>›</span>
+      <span>Developer Guidelines</span>
+    </div>
+    <h1>PySide6 + QML<br>Developer Guidelines</h1>
+    <p>The mental model, architecture patterns, and practical rules for building clean, maintainable PySide6 applications with QML frontends. Read this before writing your first line.</p>
+  </div>
+
+  <!-- ── 1. MENTAL MODEL ──────────────────────────────────────────────── -->
+  <section class="guide-section" id="mental-model">
+    <h2><span class="section-num">1</span> The Mental Model</h2>
+    <p class="section-intro">
+      The single most important thing to internalise: <strong style="color:var(--text)">QML owns the screen, Python owns the data and logic.</strong>
+      They are two separate worlds connected by a thin, well-defined bridge. Never let either side reach across and mutate the other's internals directly.
+    </p>
+
+    <div class="arch-diagram">
+<span class="layer-label">┌─────────────────────────── QML / UI World ───────────────────────────┐</span>
+│                                                                       │
+│  <span class="box">Window → Pages → Panels → Components → Delegates</span>                     │
+│  <span class="note">(declarative, property bindings, animations, user interaction)</span>        │
+│                                                                       │
+<span class="layer-label">└──────────────────────┬────────────────┬──────────────────────────────┘</span>
+                       │                │
+           <span class="arrow">  Signals ↑    │                │  ↓ Slots / Q_INVOKABLE</span>
+           <span class="arrow">  (push data)  │                │  (QML calls Python fn)</span>
+                       │                │
+<span class="layer-label">┌──────────────────────┴────────────────┴──────────────────────────────┐</span>
+│                                                                       │
+│  <span class="box">QObject subclasses · QAbstractModels · @Property · @Slot</span>             │
+│  <span class="note">(business logic, data, file I/O, network, computation)</span>               │
+│                                                                       │
+<span class="layer-label">└─────────────────────────── Python / Logic World ─────────────────────┘</span>
+    </div>
+
+    <h3>The three rules of the bridge</h3>
+    <ol>
+      <li><strong>Python → QML:</strong> emit a <code>Signal</code>. QML listens via <code>Connections</code> or property bindings.</li>
+      <li><strong>QML → Python:</strong> call a <code>@Slot</code> (or <code>Q_INVOKABLE</code>). Python executes and optionally emits a signal back.</li>
+      <li><strong>Shared state:</strong> expose it as a <code>@Property(notify=signal)</code>. QML binds to it; Python updates the value and emits the notify signal; QML re-evaluates automatically.</li>
+    </ol>
+
+    <div class="callout callout-info">
+      <span class="callout-icon">💡</span>
+      <div class="callout-body">
+        <strong>Think of Python as the server, QML as the client.</strong>
+        <p>The client renders and accepts user input. The server owns truth. Communication happens over a typed API of signals, slots, and bindable properties — not direct memory access.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 2. ARCHITECTURE ─────────────────────────────────────────────── -->
+  <section class="guide-section" id="architecture">
+    <h2><span class="section-num">2</span> Application Architecture</h2>
+    <p class="section-intro">Every PySide6 + QML application follows this four-layer structure. Keep the layers clean — resist the temptation to skip one.</p>
+
+    <table class="compare-table">
+      <tr>
+        <th>Layer</th><th>Responsibility</th><th>Files</th>
+      </tr>
+      <tr>
+        <td>Entry Point</td>
+        <td>Create <code>QGuiApplication</code>, instantiate models/backends, call <code>setContextProperty</code>, load the root QML file.</td>
+        <td><code>main.py</code></td>
+      </tr>
+      <tr>
+        <td>Backend / Model</td>
+        <td>All Python logic, data storage, computation. Subclass <code>QObject</code> or a model base class. No imports from QML.</td>
+        <td><code>*_backend.py</code>, <code>*_model.py</code></td>
+      </tr>
+      <tr>
+        <td>Root QML</td>
+        <td>Top-level <code>ApplicationWindow</code> or <code>Window</code>. Sets up the bridge: <code>Connections</code>, top-level layout, navigation host.</td>
+        <td><code>MainWindow.qml</code></td>
+      </tr>
+      <tr>
+        <td>QML Components</td>
+        <td>Reusable UI pieces. Communicate only through <code>required property</code>, explicit <code>signal</code>, and public methods. Never reach for global context properties.</td>
+        <td><code>components/*.qml</code></td>
+      </tr>
+    </table>
+
+    <div class="pre-label">
+      <span>main.py — canonical entry point</span>
+      <button class="copy-code" onclick="copyPre(this)">Copy</button>
+    </div>
+    <pre><code><span class="kw">import</span> sys
+<span class="kw">from</span> PySide6.QtGui <span class="kw">import</span> QGuiApplication
+<span class="kw">from</span> PySide6.QtQml <span class="kw">import</span> QQmlApplicationEngine
+<span class="kw">from</span> backend <span class="kw">import</span> MyBackend
+
+<span class="fn">app</span> = QGuiApplication(sys.argv)
+
+<span class="fn">engine</span> = QQmlApplicationEngine()
+<span class="fn">backend</span> = MyBackend()                        <span class="cm"># create BEFORE loading QML</span>
+
+engine.rootContext().setContextProperty(
+    <span class="st">"backend"</span>, backend                        <span class="cm"># expose as "backend" in QML</span>
+)
+
+engine.load(<span class="st">"MainWindow.qml"</span>)
+<span class="kw">if not</span> engine.rootObjects():
+    sys.exit(<span class="nu">-1</span>)
+
+sys.exit(app.exec())</code></pre>
+
+    <div class="callout callout-warn">
+      <span class="callout-icon">⚠️</span>
+      <div class="callout-body">
+        <strong>Always create backend objects before loading QML.</strong>
+        <p>If QML loads first it may try to resolve context properties that don't exist yet, leading to silent binding failures or <code>undefined</code> references.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 3. EXPOSING PYTHON ──────────────────────────────────────────── -->
+  <section class="guide-section" id="exposing">
+    <h2><span class="section-num">3</span> Exposing Python Objects to QML</h2>
+    <p class="section-intro">There are two complementary mechanisms. Use <strong>context properties</strong> for global singletons (backend, models). Use <strong>registered types</strong> only when you need to instantiate the object in QML itself.</p>
+
+    <h3>Context Property — the everyday pattern</h3>
+
+    <div class="pre-label">
+      <span>Python — backend/model.py</span>
+      <button class="copy-code" onclick="copyPre(this)">Copy</button>
+    </div>
+    <pre><code><span class="kw">from</span> PySide6.QtCore <span class="kw">import</span> QObject, Signal, Slot, Property
+
+<span class="kw">class</span> <span class="fn">CounterBackend</span>(QObject):
+    countChanged = Signal(<span class="nu">int</span>)          <span class="cm"># notify signal</span>
+
+    <span class="kw">def</span> <span class="fn">__init__</span>(self):
+        <span class="kw">super</span>().__init__()
+        self._count = <span class="nu">0</span>
+
+    <span class="fn">@Property</span>(<span class="nu">int</span>, notify=countChanged)
+    <span class="kw">def</span> <span class="fn">count</span>(self):
+        <span class="kw">return</span> self._count
+
+    <span class="fn">@Slot</span>()
+    <span class="kw">def</span> <span class="fn">increment</span>(self):
+        self._count += <span class="nu">1</span>
+        self.countChanged.emit(self._count)</code></pre>
+
+    <div class="pre-label">
+      <span>QML — consuming the context property</span>
+      <button class="copy-code" onclick="copyPre(this)">Copy</button>
+    </div>
+    <pre><code><span class="kw">import</span> QtQuick
+<span class="kw">import</span> QtQuick.Controls
+
+<span class="qml">ApplicationWindow</span> {
+    <span class="qml">visible:</span> <span class="kw">true</span>
+
+    <span class="qml">Text</span> {
+        <span class="cm">// auto-updates whenever backend.countChanged is emitted</span>
+        <span class="qml">text:</span> <span class="st">"Count: "</span> + backend.count
+    }
+
+    <span class="qml">Button</span> {
+        <span class="qml">text:</span> <span class="st">"Increment"</span>
+        <span class="qml">onClicked:</span> backend.increment()   <span class="cm">// calls the @Slot</span>
+    }
+}</code></pre>
+
+    <h3>Registered Type — for QML-side instantiation</h3>
+    <p>Use <code>qmlRegisterType</code> (or the <code>@QmlElement</code> decorator) when you need to create the object inside QML, e.g. for reusable models in component files.</p>
+
+    <div class="pre-label">
+      <span>Python — register the type</span>
+      <button class="copy-code" onclick="copyPre(this)">Copy</button>
+    </div>
+    <pre><code><span class="kw">from</span> PySide6.QtQml <span class="kw">import</span> QmlElement
+
+QML_IMPORT_NAME = <span class="st">"MyApp"</span>
+QML_IMPORT_MAJOR_VERSION = <span class="nu">1</span>
+
+<span class="fn">@QmlElement</span>
+<span class="kw">class</span> <span class="fn">CounterBackend</span>(QObject):
+    ...   <span class="cm"># same class body as above</span></code></pre>
+
+    <div class="pre-label">
+      <span>QML — instantiate inline</span>
+      <button class="copy-code" onclick="copyPre(this)">Copy</button>
+    </div>
+    <pre><code><span class="kw">import</span> MyApp <span class="nu">1.0</span>
+
+<span class="qml">CounterBackend</span> { <span class="qml">id:</span> counter }
+<span class="qml">Text</span> { <span class="qml">text:</span> counter.count }</code></pre>
+  </section>
+
+  <!-- ── 4. SIGNALS & SLOTS ──────────────────────────────────────────── -->
+  <section class="guide-section" id="signals-slots">
+    <h2><span class="section-num">4</span> Signals &amp; Slots — The Communication API</h2>
+    <p class="section-intro">Signals and slots are the core event bus. Understand the direction before you wire anything up.</p>
+
+    <table class="compare-table">
+      <tr><th>Direction</th><th>Mechanism</th><th>When to use</th></tr>
+      <tr>
+        <td>Python → QML</td>
+        <td><code>Signal</code> declaration + <code>.emit()</code></td>
+        <td>Data ready, async operation complete, timer tick, model changed</td>
+      </tr>
+      <tr>
+        <td>QML → Python</td>
+        <td><code>@Slot</code> decorated method</td>
+        <td>Button click, user input, request for action or data fetch</td>
+      </tr>
+      <tr>
+        <td>QML → QML</td>
+        <td>Property bindings, QML <code>signal</code> + <code>onSignal</code></td>
+        <td>Within a component tree — parent/child communication</td>
+      </tr>
+    </table>
+
+    <h3>Defining signals with payload</h3>
+
+    <div class="pre-label">
+      <span>Python — typed signals</span>
+      <button class="copy-code" onclick="copyPre(this)">Copy</button>
+    </div>
+    <pre><code><span class="kw">from</span> PySide6.QtCore <span class="kw">import</span> QObject, Signal
+
+<span class="kw">class</span> <span class="fn">DataBackend</span>(QObject):
+    <span class="cm"># Signal with no payload</span>
+    resetRequested = Signal()
+
+    <span class="cm"># Signal carrying typed data</span>
+    itemLoaded = Signal(<span class="nu">str</span>, <span class="nu">int</span>)     <span class="cm"># (name: str, score: int)</span>
+
+    <span class="cm"># Signal with a dict payload (use 'object' type)</span>
+    configUpdated = Signal(<span class="nu">object</span>)    <span class="cm"># passes any Python object</span></code></pre>
+
+    <h3>Listening in QML with Connections</h3>
+
+    <div class="pre-label">
+      <span>QML — Connections block</span>
+      <button class="copy-code" onclick="copyPre(this)">Copy</button>
+    </div>
+    <pre><code><span class="qml">Connections</span> {
+    <span class="qml">target:</span> backend                       <span class="cm">// the Python QObject</span>
+
+    <span class="kw">function</span> <span class="fn">onItemLoaded</span>(name, score) {
+        console.log(<span class="st">"Got:"</span>, name, score)
+        myLabel.text = name
+    }
+
+    <span class="kw">function</span> <span class="fn">onResetRequested</span>() {
+        listView.model.clear()
+    }
+}</code></pre>
+
+    <h3>Slots — what Python exposes to QML</h3>
+
+    <div class="pre-label">
+      <span>Python — @Slot rules</span>
+      <button class="copy-code" onclick="copyPre(this)">Copy</button>
+    </div>
+    <pre><code><span class="kw">from</span> PySide6.QtCore <span class="kw">import</span> Slot
+
+<span class="kw">class</span> <span class="fn">Backend</span>(QObject):
+
+    <span class="cm"># No args, no return value</span>
+    <span class="fn">@Slot</span>()
+    <span class="kw">def</span> <span class="fn">doWork</span>(self): ...
+
+    <span class="cm"># Args must be declared as types</span>
+    <span class="fn">@Slot</span>(<span class="nu">str</span>, <span class="nu">int</span>)
+    <span class="kw">def</span> <span class="fn">addItem</span>(self, name: str, score: int): ...
+
+    <span class="cm"># Return value annotated with 'result='</span>
+    <span class="fn">@Slot</span>(<span class="nu">int</span>, result=<span class="nu">str</span>)
+    <span class="kw">def</span> <span class="fn">getLabel</span>(self, index: int) -> str:
+        <span class="kw">return</span> self._data[index]</code></pre>
+
+    <div class="callout callout-tip">
+      <span class="callout-icon">✅</span>
+      <div class="callout-body">
+        <strong>Always declare argument types in @Slot.</strong>
+        <p>Without type declarations PySide6 uses Python's dynamic dispatch, which can silently fail or pass the wrong type when called from JS (e.g. JS numbers become <code>float</code> instead of <code>int</code>).</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 5. PROPERTIES ──────────────────────────────────────────────── -->
+  <section class="guide-section" id="properties">
+    <h2><span class="section-num">5</span> Reactive Properties</h2>
+    <p class="section-intro">
+      A <code>@Property</code> with a <code>notify</code> signal is what enables QML's binding engine to react to Python-side value changes automatically. This is the primary way to share live state between layers.
+    </p>
+
+    <div class="pre-label">
+      <span>Python — full property pattern</span>
+      <button class="copy-code" onclick="copyPre(this)">Copy</button>
+    </div>
+    <pre><code><span class="kw">from</span> PySide6.QtCore <span class="kw">import</span> QObject, Signal, Property, Slot
+
+<span class="kw">class</span> <span class="fn">ViewModel</span>(QObject):
+    <span class="cm"># Step 1: Declare the notify signal</span>
+    progressChanged = Signal(<span class="nu">float</span>)
+    labelChanged    = Signal(<span class="nu">str</span>)
+
+    <span class="kw">def</span> <span class="fn">__init__</span>(self):
+        <span class="kw">super</span>().__init__()
+        self._progress = <span class="nu">0.0</span>
+        self._label    = <span class="st">""</span>
+
+    <span class="cm"># Step 2: Getter decorated with @Property</span>
+    <span class="fn">@Property</span>(<span class="nu">float</span>, notify=progressChanged)
+    <span class="kw">def</span> <span class="fn">progress</span>(self):
+        <span class="kw">return</span> self._progress
+
+    <span class="cm"># Step 3: Setter emits the notify signal</span>
+    <span class="fn">@progress.setter</span>
+    <span class="kw">def</span> <span class="fn">progress</span>(self, value: float):
+        <span class="kw">if</span> self._progress != value:
+            self._progress = value
+            self.progressChanged.emit(value)  <span class="cm"># QML re-evaluates all bindings</span>
+
+    <span class="fn">@Property</span>(<span class="nu">str</span>, notify=labelChanged)
+    <span class="kw">def</span> <span class="fn">label</span>(self): <span class="kw">return</span> self._label</code></pre>
+
+    <div class="pre-label">
+      <span>QML — binding to a Python property</span>
+      <button class="copy-code" onclick="copyPre(this)">Copy</button>
+    </div>
+    <pre><code><span class="qml">ProgressBar</span> {
+    <span class="cm">// Re-evaluates automatically when vm.progressChanged fires</span>
+    <span class="qml">value:</span> vm.progress
+}
+
+<span class="qml">Text</span> {
+    <span class="qml">text:</span> vm.label + <span class="st">" ("</span> + Math.round(vm.progress * <span class="nu">100</span>) + <span class="st">"%)"</span>
+}</code></pre>
+
+    <div class="callout callout-warn">
+      <span class="callout-icon">⚠️</span>
+      <div class="callout-body">
+        <strong>Guard emission with an equality check.</strong>
+        <p>Emitting the notify signal when the value hasn't actually changed wastes binding evaluations and can cause subtle cycles. Always check <code>if self._x != value</code> before emitting.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 6. UI/UX DESIGN ────────────────────────────────────────────── -->
+  <section class="guide-section" id="ux-design">
+    <h2><span class="section-num">6</span> UI/UX Design in QML</h2>
+    <p class="section-intro">QML is a declarative UI language — describe <em>what</em> the UI looks like, not <em>how</em> to draw it step by step. Think in terms of a visual tree where every node is a rectangle with optional content, behaviours, and children.</p>
+
+    <h3>Design-to-QML workflow</h3>
+    <ol>
+      <li><strong>Sketch the zones</strong> — Split the screen into 2–4 top-level zones (toolbar, sidebar, content, footer). Map each zone to a Qt Quick layout or <code>SplitView</code>.</li>
+      <li><strong>Choose a layout primitive</strong> — Prefer layouts (<code>ColumnLayout</code>, <code>RowLayout</code>, <code>GridLayout</code>) over raw anchors for dynamic resizing. Use <code>SplitView</code> for user-resizable panels.</li>
+      <li><strong>Pick the right controls</strong> — Use QtQuick.Controls 2 items (<code>Button</code>, <code>TextField</code>, <code>ComboBox</code>…) for interactive elements; use plain <code>Item</code> / <code>Rectangle</code> for purely visual shapes.</li>
+      <li><strong>Define a style token set</strong> — Declare colours, radii, font sizes, and spacing as <code>readonly property</code> values in a root-level <code>QtObject</code> and reference them everywhere.</li>
+      <li><strong>Add motion last</strong> — Wire up <code>Behavior on</code>, <code>NumberAnimation</code>, and <code>Transition</code> only after the static layout is correct.</li>
+    </ol>
+
+    <h3>Style token pattern</h3>
+
+    <div class="pre-label">
+      <span>QML — centralised design tokens</span>
+      <button class="copy-code" onclick="copyPre(this)">Copy</button>
+    </div>
+    <pre><code><span class="cm">// Theme.qml — import everywhere as a singleton</span>
+<span class="kw">pragma Singleton</span>
+<span class="qml">import</span> QtQuick
+
+<span class="qml">QtObject</span> {
+    <span class="kw">readonly property</span> <span class="nu">color</span> <span class="qml">bg</span>:        <span class="st">"#0d1117"</span>
+    <span class="kw">readonly property</span> <span class="nu">color</span> <span class="qml">surface</span>:   <span class="st">"#161b22"</span>
+    <span class="kw">readonly property</span> <span class="nu">color</span> <span class="qml">accent</span>:    <span class="st">"#58a6ff"</span>
+    <span class="kw">readonly property</span> <span class="nu">color</span> <span class="qml">textMain</span>:  <span class="st">"#e6edf3"</span>
+    <span class="kw">readonly property</span> <span class="nu">color</span> <span class="qml">textMuted</span>: <span class="st">"#8b949e"</span>
+
+    <span class="kw">readonly property</span> <span class="nu">int</span>   <span class="qml">radius</span>:    <span class="nu">8</span>
+    <span class="kw">readonly property</span> <span class="nu">int</span>   <span class="qml">spacing</span>:   <span class="nu">12</span>
+    <span class="kw">readonly property</span> <span class="nu">int</span>   <span class="qml">fontSizeBody</span>: <span class="nu">13</span>
+    <span class="kw">readonly property</span> <span class="nu">int</span>   <span class="qml">fontSizeLabel</span>: <span class="nu">11</span>
+}</code></pre>
+
+    <h3>Responsive sizing rules</h3>
+    <ul>
+      <li>Size <strong>windows</strong> in pixels; size <strong>internal elements</strong> with <code>Layout.fillWidth</code> / <code>fillHeight</code>, not fixed px.</li>
+      <li>Use <code>implicitWidth</code> / <code>implicitHeight</code> in custom components so parent layouts can make informed sizing decisions.</li>
+      <li>Prefer <code>font.pixelSize</code> over <code>font.pointSize</code> for consistent cross-DPI rendering on desktop.</li>
+      <li>Set <code>minimumWidth</code> and <code>minimumHeight</code> on the root <code>Window</code> to prevent the UI from collapsing.</li>
+    </ul>
+
+    <h3>Visual hierarchy checklist</h3>
+    <table class="compare-table">
+      <tr><th>Element</th><th>Guideline</th></tr>
+      <tr><td>Primary action</td><td>High-contrast fill button; one per panel maximum</td></tr>
+      <tr><td>Secondary action</td><td>Outlined or ghost button; lower visual weight</td></tr>
+      <tr><td>Destructive action</td><td>Red accent; separate from the normal action group</td></tr>
+      <tr><td>Empty states</td><td>Always show a message/icon when a list is empty — never a blank rectangle</td></tr>
+      <tr><td>Loading states</td><td>Use <code>BusyIndicator</code> or a skeleton shimmer rather than blocking the UI</td></tr>
+      <tr><td>Feedback</td><td>Every user action must produce visible feedback within 100 ms (animation, state change, or status text)</td></tr>
+    </table>
+  </section>
+
+  <!-- ── 7. LAYOUTS & ANCHORS ───────────────────────────────────────── -->
+  <section class="guide-section" id="layouts-guide">
+    <h2><span class="section-num">7</span> Layouts &amp; Anchors</h2>
+    <p class="section-intro">QML provides two positioning systems. Knowing which to reach for — and when not to mix them — prevents most layout headaches.</p>
+
+    <table class="compare-table">
+      <tr><th>System</th><th>Use when…</th><th>Avoid when…</th></tr>
+      <tr>
+        <td>Anchors</td>
+        <td>Positioning one item relative to another in free-form items (a floating badge, a close button pinned to a corner)</td>
+        <td>Inside <code>ColumnLayout</code> / <code>GridLayout</code> children — mixing anchors and layout attached properties causes a warning and undefined behaviour</td>
+      </tr>
+      <tr>
+        <td>ColumnLayout / RowLayout</td>
+        <td>A linear list of items that share available space, need gaps, or should wrap</td>
+        <td>Single-item centering (use <code>anchors.centerIn</code> instead)</td>
+      </tr>
+      <tr>
+        <td>GridLayout</td>
+        <td>Form-style label+field pairs, anything that needs row and column spanning</td>
+        <td>Deeply irregular layouts — it becomes harder to read than nested rows/columns</td>
+      </tr>
+      <tr>
+        <td>SplitView</td>
+        <td>User-resizable panels (IDE layout, file browser + editor)</td>
+        <td>Fixed-proportion panels — use a regular <code>RowLayout</code> with explicit ratios</td>
+      </tr>
+      <tr>
+        <td>StackLayout</td>
+        <td>Tab content, wizard pages — only one child visible at a time</td>
+        <td>Animated page transitions — use <code>StackView</code> instead</td>
+      </tr>
+    </table>
+
+    <div class="do-dont">
+      <div class="do">
+        <div class="label">✅ Do — Layout attached properties</div>
+        <pre><code><span class="qml">ColumnLayout</span> {
+    <span class="qml">spacing:</span> <span class="nu">8</span>
+    <span class="qml">Rectangle</span> {
+        <span class="qml">Layout.fillWidth:</span>  <span class="kw">true</span>
+        <span class="qml">Layout.fillHeight:</span> <span class="kw">true</span>
+    }
+}</code></pre>
+      </div>
+      <div class="dont">
+        <div class="label">❌ Don't — Anchors inside Layout</div>
+        <pre><code><span class="qml">ColumnLayout</span> {
+    <span class="qml">Rectangle</span> {
+        <span class="cm">// WARNING: cannot use anchors inside layout</span>
+        <span class="qml">anchors.fill:</span> parent
+    }
+}</code></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 8. COMPONENTS ──────────────────────────────────────────────── -->
+  <section class="guide-section" id="components">
+    <h2><span class="section-num">8</span> Components &amp; Reuse</h2>
+    <p class="section-intro">Any QML block you copy more than once should become its own component file. A well-designed component is self-contained: it receives data through <code>required property</code>, fires actions through <code>signal</code>, and never reaches outside its own subtree.</p>
+
+    <h3>Anatomy of a reusable component</h3>
+
+    <div class="pre-label">
+      <span>QML — StatusChip.qml</span>
+      <button class="copy-code" onclick="copyPre(this)">Copy</button>
+    </div>
+    <pre><code><span class="kw">import</span> QtQuick
+<span class="kw">import</span> QtQuick.Controls
+
+<span class="qml">Rectangle</span> {
+    <span class="cm">// ── Public API ─────────────────────────────────────</span>
+    <span class="kw">required property</span> <span class="nu">string</span> <span class="qml">label</span>
+    <span class="kw">required property</span> <span class="nu">color</span>  <span class="qml">chipColor</span>
+    <span class="kw">property</span>          <span class="nu">bool</span>   <span class="qml">removable:</span> <span class="kw">false</span>
+    signal <span class="fn">removed</span>()                      <span class="cm">// signal, not a function</span>
+
+    <span class="cm">// ── Internal sizing ────────────────────────────────</span>
+    <span class="qml">implicitWidth:</span>  row.implicitWidth + <span class="nu">16</span>
+    <span class="qml">implicitHeight:</span> <span class="nu">26</span>
+    <span class="qml">radius:</span>         <span class="nu">13</span>
+    <span class="qml">color:</span>          Qt.alpha(chipColor, <span class="nu">0.15</span>)
+    <span class="qml">border.color:</span>   Qt.alpha(chipColor, <span class="nu">0.4</span>)
+
+    <span class="qml">Row</span> {
+        <span class="qml">id:</span> row
+        <span class="qml">anchors.centerIn:</span> parent
+        <span class="qml">spacing:</span> <span class="nu">4</span>
+        <span class="qml">Label</span> { <span class="qml">text:</span> label; <span class="qml">color:</span> chipColor; <span class="qml">font.pixelSize:</span> <span class="nu">11</span> }
+        <span class="qml">Label</span> {
+            <span class="qml">visible:</span> removable
+            <span class="qml">text:</span> <span class="st">"×"</span>
+            <span class="qml">color:</span> chipColor
+            <span class="qml">MouseArea</span> { <span class="qml">anchors.fill:</span> parent; <span class="qml">onClicked:</span> removed() }
+        }
+    }
+}</code></pre>
+
+    <h3>required property vs property</h3>
+    <table class="compare-table">
+      <tr><th>Keyword</th><th>Meaning</th><th>When to use</th></tr>
+      <tr>
+        <td><code>required property</code></td>
+        <td>Caller MUST provide this value. QML will warn if it's missing.</td>
+        <td>Data a component cannot work without (e.g. delegate's model data)</td>
+      </tr>
+      <tr>
+        <td><code>property</code></td>
+        <td>Optional — has a default value or can be left unset.</td>
+        <td>Configuration options (<code>spacing</code>, <code>editable</code>, <code>readOnly</code>)</td>
+      </tr>
+      <tr>
+        <td><code>readonly property</code></td>
+        <td>Computed or constant — cannot be written from outside.</td>
+        <td>Derived values, constants, design tokens</td>
+      </tr>
+    </table>
+
+    <div class="callout callout-info">
+      <span class="callout-icon">💡</span>
+      <div class="callout-body">
+        <strong>Delegates always use <code>required property</code>.</strong>
+        <p>When a <code>ListView</code> or <code>TableView</code> instantiates a delegate, it injects model role values via <code>required property</code>. Never use the implicit model context object — <code>required property</code> is faster, type-safe, and works with <code>TableView</code>.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 9. MODELS & VIEWS ──────────────────────────────────────────── -->
+  <section class="guide-section" id="models-views">
+    <h2><span class="section-num">9</span> Models &amp; Views</h2>
+    <p class="section-intro">The Qt Model/View pattern cleanly separates data storage from presentation. Pick the right base class for your data shape.</p>
+
+    <table class="compare-table">
+      <tr><th>Base class</th><th>Data shape</th><th>QML view</th></tr>
+      <tr><td>QAbstractListModel</td><td>Flat list of homogeneous items</td><td>ListView, Repeater, ComboBox</td></tr>
+      <tr><td>QAbstractTableModel</td><td>2-D grid (rows × columns) with headers</td><td>TableView + HorizontalHeaderView</td></tr>
+      <tr><td>QAbstractItemModel</td><td>Hierarchical / tree structure</td><td>TreeView</td></tr>
+      <tr><td>QSortFilterProxyModel</td><td>Wraps any model; adds filter + sort</td><td>Any view (proxy is transparent)</td></tr>
+    </table>
+
+    <h3>Minimal QAbstractListModel</h3>
+
+    <div class="pre-label">
+      <span>Python — minimal list model</span>
+      <button class="copy-code" onclick="copyPre(this)">Copy</button>
+    </div>
+    <pre><code><span class="kw">from</span> PySide6.QtCore <span class="kw">import</span> (QAbstractListModel, QModelIndex,
+                              Qt, Slot)
+
+<span class="kw">class</span> <span class="fn">TaskModel</span>(QAbstractListModel):
+    NameRole  = Qt.UserRole + <span class="nu">1</span>
+    DoneRole  = Qt.UserRole + <span class="nu">2</span>
+
+    <span class="kw">def</span> <span class="fn">__init__</span>(self):
+        <span class="kw">super</span>().__init__()
+        self._tasks = []                          <span class="cm"># [{name, done}, ...]</span>
+
+    <span class="cm"># ── Required overrides ─────────────────────────────</span>
+    <span class="kw">def</span> <span class="fn">rowCount</span>(self, parent=QModelIndex()):
+        <span class="kw">return</span> <span class="nu">0</span> <span class="kw">if</span> parent.isValid() <span class="kw">else</span> len(self._tasks)
+
+    <span class="kw">def</span> <span class="fn">data</span>(self, index, role=Qt.DisplayRole):
+        <span class="kw">if not</span> index.isValid(): <span class="kw">return None</span>
+        task = self._tasks[index.row()]
+        <span class="kw">if</span>   role == self.NameRole: <span class="kw">return</span> task[<span class="st">"name"</span>]
+        <span class="kw">elif</span> role == self.DoneRole: <span class="kw">return</span> task[<span class="st">"done"</span>]
+
+    <span class="kw">def</span> <span class="fn">roleNames</span>(self):
+        <span class="kw">return</span> {self.NameRole: b<span class="st">"name"</span>, self.DoneRole: b<span class="st">"done"</span>}
+
+    <span class="cm"># ── CRUD ────────────────────────────────────────────</span>
+    <span class="fn">@Slot</span>(<span class="nu">str</span>)
+    <span class="kw">def</span> <span class="fn">addTask</span>(self, name: str):
+        row = len(self._tasks)
+        self.beginInsertRows(QModelIndex(), row, row)
+        self._tasks.append({<span class="st">"name"</span>: name, <span class="st">"done"</span>: <span class="kw">False</span>})
+        self.endInsertRows()
+
+    <span class="fn">@Slot</span>(<span class="nu">int</span>)
+    <span class="kw">def</span> <span class="fn">removeTask</span>(self, row: int):
+        self.beginRemoveRows(QModelIndex(), row, row)
+        self._tasks.pop(row)
+        self.endRemoveRows()</code></pre>
+
+    <div class="callout callout-danger">
+      <span class="callout-icon">🚫</span>
+      <div class="callout-body">
+        <strong>Never mutate _data without begin/end pairs.</strong>
+        <p>Always bracket insertions with <code>beginInsertRows</code> / <code>endInsertRows</code> and deletions with <code>beginRemoveRows</code> / <code>endRemoveRows</code>. Skipping these causes the view to show stale data or crash.</p>
+      </div>
+    </div>
+
+    <h3>Connecting model to a ListView</h3>
+
+    <div class="pre-label">
+      <span>QML — ListView with required property delegate</span>
+      <button class="copy-code" onclick="copyPre(this)">Copy</button>
+    </div>
+    <pre><code><span class="qml">ListView</span> {
+    <span class="qml">model:</span> taskModel                  <span class="cm">// context property from Python</span>
+    <span class="qml">delegate:</span> <span class="qml">ItemDelegate</span> {
+        <span class="cm">// Inject model roles via required property</span>
+        <span class="kw">required property</span> <span class="nu">string</span> <span class="qml">name</span>
+        <span class="kw">required property</span> <span class="nu">bool</span>   <span class="qml">done</span>
+
+        <span class="qml">text:</span> name
+        <span class="qml">opacity:</span> done ? <span class="nu">0.4</span> : <span class="nu">1.0</span>
+    }
+}</code></pre>
+  </section>
+
+  <!-- ── 10. STATES & TRANSITIONS ──────────────────────────────────── -->
+  <section class="guide-section" id="states">
+    <h2><span class="section-num">10</span> States &amp; Transitions</h2>
+    <p class="section-intro">QML's <code>states</code> + <code>transitions</code> system is the right tool for elements that have distinct visual modes (normal, hovered, pressed, expanded, error). Keep state logic in QML; keep business logic in Python.</p>
+
+    <div class="pre-label">
+      <span>QML — state machine for a card</span>
+      <button class="copy-code" onclick="copyPre(this)">Copy</button>
+    </div>
+    <pre><code><span class="qml">Rectangle</span> {
+    <span class="qml">id:</span> card
+    <span class="qml">color:</span> <span class="st">"#161b22"</span>
+    <span class="qml">border.color:</span> <span class="st">"#30363d"</span>
+    <span class="qml">scale:</span> <span class="nu">1.0</span>
+
+    <span class="qml">states:</span> [
+        <span class="qml">State</span> {
+            <span class="qml">name:</span> <span class="st">"hovered"</span>
+            <span class="qml">when:</span> mouseArea.containsMouse
+            <span class="qml">PropertyChanges</span> { <span class="qml">target:</span> card; <span class="qml">border.color:</span> <span class="st">"#58a6ff"</span> }
+        },
+        <span class="qml">State</span> {
+            <span class="qml">name:</span> <span class="st">"pressed"</span>
+            <span class="qml">when:</span> mouseArea.pressed
+            <span class="qml">PropertyChanges</span> { <span class="qml">target:</span> card; <span class="qml">scale:</span> <span class="nu">0.97</span> }
+        }
+    ]
+
+    <span class="qml">transitions:</span> [
+        <span class="qml">Transition</span> {
+            <span class="qml">ColorAnimation</span>  { <span class="qml">duration:</span> <span class="nu">150</span> }
+            <span class="qml">NumberAnimation</span> { <span class="qml">property:</span> <span class="st">"scale"</span>; <span class="qml">duration:</span> <span class="nu">100</span>; <span class="qml">easing.type:</span> Easing.OutQuad }
+        }
+    ]
+
+    <span class="qml">MouseArea</span> { <span class="qml">id:</span> mouseArea; <span class="qml">anchors.fill:</span> parent; <span class="qml">hoverEnabled:</span> <span class="kw">true</span> }
+}</code></pre>
+
+    <h3>Behavior on vs Transition</h3>
+    <table class="compare-table">
+      <tr><th>Tool</th><th>Best for</th></tr>
+      <tr><td><code>Behavior on x</code></td><td>Any time a single property changes, regardless of cause — springs, smooth follow</td></tr>
+      <tr><td><code>Transition</code></td><td>Coordinated multi-property animations triggered by an explicit state change</td></tr>
+      <tr><td><code>NumberAnimation</code> standalone</td><td>Fire-and-forget animations driven imperatively (e.g. Play button)</td></tr>
+      <tr><td><code>SequentialAnimation</code></td><td>Chain multiple animations with delays and pauses in order</td></tr>
+    </table>
+  </section>
+
+  <!-- ── 11. MODEL TYPES ────────────────────────────────────────────── -->
+  <section class="guide-section" id="model-types">
+    <h2><span class="section-num">11</span> Backend Model Reference</h2>
+    <p class="section-intro">Quick decision guide for choosing the right Python model base class.</p>
+
+    <h3>QAbstractListModel — flat lists</h3>
+    <p>Override: <code>rowCount()</code>, <code>data()</code>, <code>roleNames()</code>. For mutable lists also implement <code>setData()</code> and <code>flags()</code>.</p>
+
+    <h3>QAbstractTableModel — 2-D grids</h3>
+    <p>Add <code>columnCount()</code> and <code>headerData()</code> on top of the list overrides. Bracket all mutations with <code>beginInsertRows</code>/<code>endInsertRows</code>, <code>beginInsertColumns</code>/<code>endInsertColumns</code>, <code>beginRemoveRows</code>/<code>endRemoveRows</code>.</p>
+
+    <h3>QAbstractItemModel — trees</h3>
+    <p>The hardest base class. The index()/parent() contract must be self-consistent:</p>
+    <ul>
+      <li><code>index(row, col, parent)</code> → returns a <code>QModelIndex</code> whose <code>internalPointer</code> is the child <em>node object</em>.</li>
+      <li><code>parent(child_index)</code> → returns the index for the child's <em>parent node</em>, using the grandparent as the new parent argument.</li>
+      <li>For a root-level item, <code>parent()</code> must return an <strong>invalid</strong> <code>QModelIndex()</code>.</li>
+    </ul>
+
+    <h3>QSortFilterProxyModel — filter + sort overlay</h3>
+
+    <div class="pre-label">
+      <span>Python — proxy model pattern</span>
+      <button class="copy-code" onclick="copyPre(this)">Copy</button>
+    </div>
+    <pre><code><span class="kw">from</span> PySide6.QtCore <span class="kw">import</span> QSortFilterProxyModel, Qt, Slot
+
+<span class="kw">class</span> <span class="fn">FilterProxy</span>(QSortFilterProxyModel):
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, source_model):
+        <span class="kw">super</span>().__init__()
+        self.setSourceModel(source_model)
+        self._search = <span class="st">""</span>
+
+    <span class="fn">@Slot</span>(<span class="nu">str</span>)
+    <span class="kw">def</span> <span class="fn">setSearch</span>(self, text: str):
+        self._search = text.lower()
+        self.invalidateFilter()             <span class="cm"># re-evaluate all rows</span>
+
+    <span class="kw">def</span> <span class="fn">filterAcceptsRow</span>(self, source_row, source_parent):
+        idx   = self.sourceModel().index(source_row, <span class="nu">0</span>, source_parent)
+        name  = self.sourceModel().data(idx, Qt.DisplayRole) <span class="kw">or</span> <span class="st">""</span>
+        <span class="kw">return</span> self._search <span class="kw">in</span> name.lower()
+
+    <span class="cm"># Expose proxy to QML as a context property (not the source)</span>
+    <span class="cm"># engine.rootContext().setContextProperty("model", proxy)</span></code></pre>
+
+    <div class="callout callout-tip">
+      <span class="callout-icon">✅</span>
+      <div class="callout-body">
+        <strong>Use <code>mapToSource()</code> when deleting through the proxy.</strong>
+        <p>Calling <code>source_model.removeRow(proxy_row)</code> deletes the wrong row. Always call <code>proxy.mapToSource(proxy.index(proxy_row, 0)).row()</code> to get the true source row first.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 12. THREADING ─────────────────────────────────────────────── -->
+  <section class="guide-section" id="threading">
+    <h2><span class="section-num">12</span> Threading &amp; Real-time Data</h2>
+    <p class="section-intro">All QML / Qt operations must happen on the main thread. Long-running Python tasks must run in a worker and communicate back via signals — never touch the model or UI from a background thread.</p>
+
+    <h3>Safe pattern: QThread worker</h3>
+
+    <div class="pre-label">
+      <span>Python — worker thread pattern</span>
+      <button class="copy-code" onclick="copyPre(this)">Copy</button>
+    </div>
+    <pre><code><span class="kw">from</span> PySide6.QtCore <span class="kw">import</span> QObject, QThread, Signal, Slot
+
+<span class="kw">class</span> <span class="fn">Worker</span>(QObject):
+    resultReady = Signal(<span class="nu">object</span>)          <span class="cm"># emits result to main thread</span>
+    finished    = Signal()
+
+    <span class="fn">@Slot</span>()
+    <span class="kw">def</span> <span class="fn">run</span>(self):
+        data = slow_computation()           <span class="cm"># runs in worker thread</span>
+        self.resultReady.emit(data)         <span class="cm"># safe — Qt queued connection</span>
+        self.finished.emit()
+
+<span class="kw">class</span> <span class="fn">Controller</span>(QObject):
+    <span class="kw">def</span> <span class="fn">start</span>(self):
+        self._thread = QThread()
+        self._worker = Worker()
+        self._worker.moveToThread(self._thread)
+
+        self._thread.started.connect(self._worker.run)
+        self._worker.finished.connect(self._thread.quit)
+        self._worker.resultReady.connect(self._on_result)  <span class="cm"># main thread</span>
+
+        self._thread.start()
+
+    <span class="kw">def</span> <span class="fn">_on_result</span>(self, data):
+        <span class="cm"># This slot runs on the main thread — safe to update model</span>
+        self._model.appendData(data)</code></pre>
+
+    <h3>QTimer for periodic live data</h3>
+    <p>For periodic UI updates (live charts, dashboards) prefer <code>QTimer</code> on the main thread over a background thread — it's simpler and inherently thread-safe.</p>
+
+    <div class="pre-label">
+      <span>Python — QTimer live data</span>
+      <button class="copy-code" onclick="copyPre(this)">Copy</button>
+    </div>
+    <pre><code><span class="kw">from</span> PySide6.QtCore <span class="kw">import</span> QObject, QTimer, Signal
+<span class="kw">import</span> random, math
+
+<span class="kw">class</span> <span class="fn">LiveBackend</span>(QObject):
+    newPoint = Signal(<span class="nu">float</span>, <span class="nu">float</span>)   <span class="cm"># (x, y)</span>
+
+    <span class="kw">def</span> <span class="fn">__init__</span>(self):
+        <span class="kw">super</span>().__init__()
+        self._t = <span class="nu">0.0</span>
+        self._timer = QTimer(self)
+        self._timer.timeout.connect(self._tick)
+
+    <span class="fn">@Slot</span>()
+    <span class="kw">def</span> <span class="fn">start</span>(self): self._timer.start(<span class="nu">200</span>)   <span class="cm"># 200 ms</span>
+
+    <span class="fn">@Slot</span>()
+    <span class="kw">def</span> <span class="fn">stop</span>(self):  self._timer.stop()
+
+    <span class="kw">def</span> <span class="fn">_tick</span>(self):
+        y = math.sin(self._t) + random.uniform(-<span class="nu">0.1</span>, <span class="nu">0.1</span>)
+        self.newPoint.emit(self._t, y)
+        self._t += <span class="nu">0.2</span></code></pre>
+  </section>
+
+  <!-- ── 13. PITFALLS ───────────────────────────────────────────────── -->
+  <section class="guide-section" id="pitfalls">
+    <h2><span class="section-num">13</span> Common Pitfalls &amp; Fixes</h2>
+
+    <h3>1 · Binding loops</h3>
+    <p>A binding loop occurs when property A depends on B and B depends on A. QML detects them and prints a warning; the binding eventually breaks.</p>
+
+    <div class="do-dont">
+      <div class="do">
+        <div class="label">✅ Break the loop with Qt.callLater</div>
+        <pre><code><span class="qml">onEditingFinished:</span> {
+    <span class="cm">// Defer the update until after the</span>
+    <span class="cm">// current binding evaluation is done</span>
+    Qt.callLater(<span class="kw">function</span>() {
+        myField.text = backend.value
+    })
+}</code></pre>
+      </div>
+      <div class="dont">
+        <div class="label">❌ Direct circular binding</div>
+        <pre><code><span class="cm">// text ← backend.value → text loops</span>
+<span class="qml">TextField</span> {
+    <span class="qml">text:</span> backend.value
+    <span class="qml">onTextChanged:</span> backend.setValue(text)
+}</code></pre>
+      </div>
+    </div>
+
+    <h3>2 · Accessing destroyed delegates</h3>
+    <p>If a <code>ListModel.remove()</code> is called inside a signal handler fired from a delegate, that delegate may be destroyed before the handler finishes. Any QML id lookup will throw <code>ReferenceError</code>.</p>
+
+    <div class="pre-label">
+      <span>QML — capture ids before triggering destruction</span>
+      <button class="copy-code" onclick="copyPre(this)">Copy</button>
+    </div>
+    <pre><code><span class="qml">MouseArea</span> {
+    <span class="qml">onClicked:</span> {
+        <span class="cm">// Capture BEFORE the drop, which may destroy this delegate</span>
+        <span class="kw">var</span> rootRef  = root
+        <span class="kw">var</span> proxyRef = root.proxy
+        proxyRef.Drag.drop()        <span class="cm">// may destroy delegate's QML context</span>
+        proxyRef.visible = <span class="kw">false</span>
+        rootRef.dragSourceCol = -<span class="nu">1</span>
+    }
+}</code></pre>
+
+    <h3>3 · color property in ListModel</h3>
+    <p>A <code>property color foo</code> stores a <code>QColor</code> object. Appending it to a <code>ListModel</code> role that was seeded as a string crashes with a type mismatch.</p>
+
+    <div class="do-dont">
+      <div class="do">
+        <div class="label">✅ Store as string</div>
+        <pre><code><span class="kw">property string</span> <span class="qml">accentColor:</span> <span class="st">"#58a6ff"</span>
+<span class="cm">// Pass the string into ListModel safely</span></code></pre>
+      </div>
+      <div class="dont">
+        <div class="label">❌ Store as color object</div>
+        <pre><code><span class="kw">property color</span> <span class="qml">accentColor:</span> <span class="st">"#58a6ff"</span>
+<span class="cm">// TypeError when appended to ListModel</span></code></pre>
+      </div>
+    </div>
+
+    <h3>4 · Canvas font strings</h3>
+    <p>When drawing text on a QML <code>Canvas</code>, multi-word font families must be quoted: <code>"11px 'Segoe UI'"</code>. Without the inner quotes Qt prints an "invalid font families" warning and falls back to the default font.</p>
+
+    <h3>5 · Slot type mismatch from JS</h3>
+    <p>JavaScript passes all numbers as <code>float</code>. Declare <code>@Slot(int)</code> or <code>@Slot(float)</code> explicitly so PySide6 coerces the type correctly. An untyped <code>@Slot</code> receives a Python <code>float</code> even when you pass an integer literal from QML.</p>
+
+    <h3>6 · Object ownership and garbage collection</h3>
+    <p>Python objects passed to QML become owned by QML's garbage collector unless you set <code>QQmlEngine.setObjectOwnership(obj, QQmlEngine.CppOwnership)</code>. For context properties this is set automatically, but for objects returned from <code>@Slot</code> you must manage ownership explicitly.</p>
+  </section>
+
+  <!-- ── 14. CHECKLIST ──────────────────────────────────────────────── -->
+  <section class="guide-section" id="checklist">
+    <h2><span class="section-num">14</span> Developer Checklist</h2>
+    <p class="section-intro">Run through this list before shipping any PySide6 + QML feature.</p>
+
+    <h3>Architecture</h3>
+    <ul>
+      <li>☐ Backend classes inherit <code>QObject</code> and contain zero UI logic</li>
+      <li>☐ Entry point creates all backends <em>before</em> loading QML</li>
+      <li>☐ Context properties are registered with meaningful, stable names</li>
+      <li>☐ QML never imports Python modules or calls os / sys directly</li>
+    </ul>
+
+    <h3>Signals &amp; Slots</h3>
+    <ul>
+      <li>☐ Every <code>@Slot</code> has explicit argument type declarations</li>
+      <li>☐ Every <code>@Property</code> has a matching <code>notify</code> signal</li>
+      <li>☐ Notify signals are only emitted when the value actually changes</li>
+      <li>☐ No Python logic executes directly in a QML binding expression</li>
+    </ul>
+
+    <h3>Models</h3>
+    <ul>
+      <li>☐ All insertions/deletions are wrapped in begin/end pairs</li>
+      <li>☐ Delegates use <code>required property</code> instead of implicit context</li>
+      <li>☐ Proxy deletions go through <code>mapToSource()</code></li>
+      <li>☐ <code>resetTable</code> / batch changes use <code>beginResetModel</code> / <code>endResetModel</code></li>
+    </ul>
+
+    <h3>UI / QML</h3>
+    <ul>
+      <li>☐ Layout children don't mix anchors with <code>Layout.*</code> attached properties</li>
+      <li>☐ Components expose a typed public API (<code>required property</code> + <code>signal</code>)</li>
+      <li>☐ No QML component reaches for a global context property it wasn't given</li>
+      <li>☐ Every interactive element provides visible hover / pressed feedback</li>
+      <li>☐ Canvas font strings use quoted families: <code>"14px 'Segoe UI'"</code></li>
+    </ul>
+
+    <h3>Threading</h3>
+    <ul>
+      <li>☐ Model mutations only happen on the main thread</li>
+      <li>☐ Worker threads communicate via signals (queued connection), not direct calls</li>
+      <li>☐ <code>QTimer</code> is used for periodic UI updates instead of <code>time.sleep</code></li>
+    </ul>
+
+    <div class="callout callout-tip">
+      <span class="callout-icon">🚀</span>
+      <div class="callout-body">
+        <strong>Start simple, add complexity incrementally.</strong>
+        <p>Resist the urge to build the complete architecture upfront. Start with a single <code>QObject</code> context property and a flat QML file. Extract components and model base classes only when the pain of duplication becomes real.</p>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- Footer -->
+<footer class="site-footer">
+  <span>PySide6 + QML Exploration · Python 3.9+ · PySide6 6.x</span>
+  <a href="index.html">← Back to Explorers</a>
+</footer>
+
+<button class="back-top" id="backTop" aria-label="Back to top" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<script>
+  // Hamburger
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('sidebarOverlay');
+  document.getElementById('hamburger').addEventListener('click', () => {
+    sidebar.classList.toggle('open');
+    overlay.classList.toggle('open');
+  });
+  overlay.addEventListener('click', () => {
+    sidebar.classList.remove('open');
+    overlay.classList.remove('open');
+  });
+
+  // Active nav highlight on scroll
+  const sections = Array.from(document.querySelectorAll('.guide-section'));
+  const navLinks  = Array.from(document.querySelectorAll('.nav-link[data-section]'));
+
+  function updateActive() {
+    const y = window.scrollY + 90;
+    let current = sections[0]?.id || '';
+    for (const s of sections) { if (s.offsetTop <= y) current = s.id; }
+    navLinks.forEach(l => l.classList.toggle('active', l.dataset.section === current));
+  }
+
+  window.addEventListener('scroll', updateActive, { passive: true });
+  updateActive();
+
+  navLinks.forEach(l => l.addEventListener('click', () => {
+    sidebar.classList.remove('open');
+    overlay.classList.remove('open');
+  }));
+
+  // Back to top
+  const backTop = document.getElementById('backTop');
+  window.addEventListener('scroll', () => {
+    backTop.classList.toggle('visible', window.scrollY > 300);
+  }, { passive: true });
+
+  // Copy pre block
+  function copyPre(btn) {
+    const pre = btn.closest('.pre-label').nextElementSibling;
+    navigator.clipboard.writeText(pre.innerText).then(() => {
+      const orig = btn.textContent;
+      btn.textContent = 'Copied!';
+      setTimeout(() => btn.textContent = orig, 1500);
+    });
+  }
+</script>
+
+</body>
+</html>
