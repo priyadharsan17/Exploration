@@ -1,0 +1,4 @@
+# GitHub Pages configuration
+# Serve the docs/ folder as the GitHub Pages site root
+
+theme: null

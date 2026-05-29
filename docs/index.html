@@ -1,0 +1,1465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PySide6 + QML Exploration</title>
+  <style>
+    /* ── Reset & Base ─────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:         #0d1117;
+      --bg-card:    #161b22;
+      --bg-sidebar: #0d1117;
+      --border:     #30363d;
+      --accent:     #58a6ff;
+      --accent2:    #bc8cff;
+      --accent3:    #3fb950;
+      --accent4:    #f78166;
+      --accent5:    #ffa657;
+      --accent6:    #79c0ff;
+      --text:       #e6edf3;
+      --text-muted: #8b949e;
+      --tag-bg:     #21262d;
+      --radius:     10px;
+      --sidebar-w:  260px;
+      --header-h:   60px;
+      --transition: 0.2s ease;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* ── Top Header ───────────────────────────────────────────────────── */
+    .site-header {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: var(--header-h);
+      background: rgba(13,17,23,0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 24px;
+      gap: 16px;
+      z-index: 100;
+    }
+
+    .site-header .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 1.05rem;
+      color: var(--text);
+      white-space: nowrap;
+    }
+
+    .site-header .logo svg { flex-shrink: 0; }
+
+    .header-search {
+      margin-left: auto;
+      position: relative;
+      max-width: 320px;
+      width: 100%;
+    }
+
+    .header-search input {
+      width: 100%;
+      padding: 7px 12px 7px 36px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 0.875rem;
+      outline: none;
+      transition: border-color var(--transition), box-shadow var(--transition);
+    }
+
+    .header-search input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(88,166,255,0.15);
+    }
+
+    .header-search .search-icon {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .btn-github {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 0.8rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background var(--transition), border-color var(--transition);
+      white-space: nowrap;
+    }
+
+    .btn-github:hover {
+      background: #21262d;
+      border-color: var(--accent);
+      text-decoration: none;
+    }
+
+    .hamburger {
+      display: none;
+      background: none;
+      border: none;
+      color: var(--text);
+      cursor: pointer;
+      padding: 4px;
+    }
+
+    /* ── Layout Shell ─────────────────────────────────────────────────── */
+    .layout {
+      display: flex;
+      min-height: 100vh;
+      padding-top: var(--header-h);
+    }
+
+    /* ── Sidebar ──────────────────────────────────────────────────────── */
+    .sidebar {
+      position: fixed;
+      top: var(--header-h);
+      left: 0;
+      bottom: 0;
+      width: var(--sidebar-w);
+      background: var(--bg-sidebar);
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+      padding: 20px 0 40px;
+      transition: transform var(--transition);
+      z-index: 90;
+    }
+
+    .sidebar::-webkit-scrollbar { width: 4px; }
+    .sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+    .nav-section-label {
+      padding: 6px 20px 4px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-top: 16px;
+    }
+
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 7px 20px;
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      border-radius: 0;
+      cursor: pointer;
+      transition: background var(--transition), color var(--transition);
+      border-left: 2px solid transparent;
+      line-height: 1.4;
+    }
+
+    .nav-link:hover {
+      background: rgba(88,166,255,0.07);
+      color: var(--text);
+      text-decoration: none;
+    }
+
+    .nav-link.active {
+      background: rgba(88,166,255,0.1);
+      color: var(--accent);
+      border-left-color: var(--accent);
+    }
+
+    .nav-link .nav-icon { font-size: 1rem; line-height: 1; }
+    .nav-link .nav-count {
+      margin-left: auto;
+      font-size: 0.7rem;
+      background: var(--tag-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1px 7px;
+      color: var(--text-muted);
+    }
+
+    /* ── Main Content ─────────────────────────────────────────────────── */
+    .main {
+      margin-left: var(--sidebar-w);
+      flex: 1;
+      padding: 40px 48px 80px;
+      max-width: calc(100% - var(--sidebar-w));
+    }
+
+    /* ── Hero ─────────────────────────────────────────────────────────── */
+    .hero {
+      text-align: center;
+      padding: 60px 24px 48px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: "";
+      position: absolute;
+      top: -60px; left: 50%;
+      transform: translateX(-50%);
+      width: 600px; height: 300px;
+      background: radial-gradient(ellipse at center, rgba(88,166,255,0.12) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 14px;
+      border: 1px solid rgba(88,166,255,0.35);
+      border-radius: 20px;
+      font-size: 0.78rem;
+      font-weight: 500;
+      color: var(--accent);
+      background: rgba(88,166,255,0.08);
+      margin-bottom: 18px;
+    }
+
+    .hero h1 {
+      font-size: 2.8rem;
+      font-weight: 800;
+      line-height: 1.15;
+      margin-bottom: 16px;
+      background: linear-gradient(135deg, #e6edf3 0%, var(--accent) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero p {
+      font-size: 1.1rem;
+      color: var(--text-muted);
+      max-width: 600px;
+      margin: 0 auto 28px;
+    }
+
+    .hero-stats {
+      display: flex;
+      justify-content: center;
+      gap: 32px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+
+    .hero-stat {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+
+    .hero-stat .stat-num {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .hero-stat .stat-label {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    /* ── Section ──────────────────────────────────────────────────────── */
+    .section {
+      margin-bottom: 64px;
+      scroll-margin-top: calc(var(--header-h) + 20px);
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .section-icon {
+      width: 36px; height: 36px;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+
+    .section-header h2 {
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .section-header p {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .section-count {
+      margin-left: auto;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      background: var(--tag-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 2px 10px;
+      flex-shrink: 0;
+    }
+
+    /* ── Card Grid ────────────────────────────────────────────────────── */
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 20px;
+    }
+
+    /* ── Project Card ─────────────────────────────────────────────────── */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      transition: border-color var(--transition), box-shadow var(--transition), transform var(--transition);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      opacity: 0;
+      transition: opacity var(--transition);
+    }
+
+    .card:hover {
+      border-color: var(--card-accent, var(--accent));
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+      transform: translateY(-2px);
+    }
+
+    .card:hover::before { opacity: 1; }
+
+    .card-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .card-icon {
+      width: 40px; height: 40px;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.3rem;
+      flex-shrink: 0;
+    }
+
+    .card-title-group { flex: 1; min-width: 0; }
+
+    .card-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.3;
+    }
+
+    .card-subtitle {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .card-badge {
+      flex-shrink: 0;
+      font-size: 0.68rem;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .badge-done { background: rgba(63,185,80,0.15); color: var(--accent3); border: 1px solid rgba(63,185,80,0.3); }
+    .badge-planned { background: rgba(88,166,255,0.1); color: var(--accent); border: 1px solid rgba(88,166,255,0.25); }
+
+    .card-desc {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    /* ── Concept Table inside card ────────────────────────────────────── */
+    .concept-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8rem;
+    }
+
+    .concept-table th {
+      text-align: left;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      padding: 4px 8px 6px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .concept-table td {
+      padding: 5px 8px;
+      border-bottom: 1px solid rgba(48,54,61,0.5);
+      color: var(--text-muted);
+      vertical-align: top;
+      line-height: 1.4;
+    }
+
+    .concept-table td:first-child {
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      color: var(--accent2);
+      white-space: nowrap;
+      width: 1%;
+      padding-right: 16px;
+    }
+
+    .concept-table tr:last-child td { border-bottom: none; }
+
+    /* ── Tags ─────────────────────────────────────────────────────────── */
+    .card-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: auto;
+      padding-top: 4px;
+    }
+
+    .tag {
+      font-size: 0.72rem;
+      font-weight: 500;
+      padding: 2px 9px;
+      border-radius: 6px;
+      background: var(--tag-bg);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      transition: color var(--transition), border-color var(--transition);
+    }
+
+    .tag:hover { color: var(--text); border-color: var(--text-muted); }
+
+    /* ── Run command ──────────────────────────────────────────────────── */
+    .run-cmd {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #0d1117;
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: 8px 12px;
+      font-size: 0.8rem;
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      color: var(--accent3);
+    }
+
+    .run-cmd .prompt { color: var(--text-muted); user-select: none; }
+
+    .copy-btn {
+      margin-left: auto;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      transition: color var(--transition), background var(--transition);
+    }
+
+    .copy-btn:hover { color: var(--text); background: var(--tag-bg); }
+
+    /* ── Color variants ───────────────────────────────────────────────── */
+    .c-blue   { --card-accent: #58a6ff; }
+    .c-purple { --card-accent: #bc8cff; }
+    .c-green  { --card-accent: #3fb950; }
+    .c-orange { --card-accent: #ffa657; }
+    .c-red    { --card-accent: #f78166; }
+    .c-cyan   { --card-accent: #79c0ff; }
+    .c-pink   { --card-accent: #f778ba; }
+
+    .c-blue   .card-icon, .c-blue   .section-icon { background: rgba(88,166,255,0.12); }
+    .c-purple .card-icon, .c-purple .section-icon { background: rgba(188,140,255,0.12); }
+    .c-green  .card-icon, .c-green  .section-icon { background: rgba(63,185,80,0.12); }
+    .c-orange .card-icon, .c-orange .section-icon { background: rgba(255,166,87,0.12); }
+    .c-red    .card-icon, .c-red    .section-icon { background: rgba(247,129,102,0.12); }
+    .c-cyan   .card-icon, .c-cyan   .section-icon { background: rgba(121,192,255,0.12); }
+    .c-pink   .card-icon, .c-pink   .section-icon { background: rgba(247,120,186,0.12); }
+
+    .c-blue   .card::before { background: linear-gradient(90deg, transparent, #58a6ff, transparent); }
+    .c-purple .card::before { background: linear-gradient(90deg, transparent, #bc8cff, transparent); }
+    .c-green  .card::before { background: linear-gradient(90deg, transparent, #3fb950, transparent); }
+    .c-orange .card::before { background: linear-gradient(90deg, transparent, #ffa657, transparent); }
+    .c-red    .card::before { background: linear-gradient(90deg, transparent, #f78166, transparent); }
+    .c-cyan   .card::before { background: linear-gradient(90deg, transparent, #79c0ff, transparent); }
+    .c-pink   .card::before { background: linear-gradient(90deg, transparent, #f778ba, transparent); }
+
+    /* ── Prerequisites block ──────────────────────────────────────────── */
+    .prereq-box {
+      background: rgba(63,185,80,0.06);
+      border: 1px solid rgba(63,185,80,0.2);
+      border-radius: var(--radius);
+      padding: 18px 22px;
+      margin-bottom: 28px;
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+    }
+
+    .prereq-box .prereq-icon { font-size: 1.4rem; margin-top: 2px; }
+
+    .prereq-box h3 {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--accent3);
+      margin-bottom: 6px;
+    }
+
+    .prereq-box p { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px; }
+
+    .prereq-box code {
+      display: inline-block;
+      background: #0d1117;
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      padding: 5px 12px;
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      font-size: 0.82rem;
+      color: var(--accent3);
+    }
+
+    /* ── Overlay (mobile sidebar) ─────────────────────────────────────── */
+    .sidebar-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      z-index: 89;
+    }
+
+    /* ── Back to top ──────────────────────────────────────────────────── */
+    .back-top {
+      position: fixed;
+      bottom: 28px;
+      right: 28px;
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: var(--bg);
+      border: none;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem;
+      box-shadow: 0 4px 16px rgba(88,166,255,0.35);
+      opacity: 0;
+      transform: translateY(10px);
+      transition: opacity var(--transition), transform var(--transition);
+      z-index: 80;
+    }
+
+    .back-top.visible { opacity: 1; transform: translateY(0); }
+
+    /* ── Footer ───────────────────────────────────────────────────────── */
+    .site-footer {
+      margin-left: var(--sidebar-w);
+      border-top: 1px solid var(--border);
+      padding: 24px 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    /* ── Search highlight / no-results ───────────────────────────────── */
+    .search-highlight {
+      background: rgba(255,210,50,0.25);
+      color: var(--text);
+      border-radius: 2px;
+      padding: 0 1px;
+    }
+
+    .no-results {
+      display: none;
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 32px;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    /* ── Responsive ───────────────────────────────────────────────────── */
+    @media (max-width: 900px) {
+      .sidebar {
+        transform: translateX(-100%);
+      }
+      .sidebar.open {
+        transform: translateX(0);
+      }
+      .sidebar-overlay.open { display: block; }
+      .main { margin-left: 0; max-width: 100%; padding: 24px 20px 60px; }
+      .site-footer { margin-left: 0; padding: 20px 20px; }
+      .hamburger { display: flex; }
+      .hero h1 { font-size: 2rem; }
+    }
+
+    @media (max-width: 600px) {
+      .card-grid { grid-template-columns: 1fr; }
+      .hero-stats { gap: 20px; }
+      .header-search { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Top Header ───────────────────────────────────────────────────────── -->
+<header class="site-header">
+  <button class="hamburger" id="hamburger" aria-label="Toggle navigation">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+  </button>
+  <div class="logo">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#58a6ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
+    </svg>
+    PySide6 + QML Exploration
+  </div>
+  <div class="header-search">
+    <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input type="search" id="globalSearch" placeholder="Search concepts, components…" autocomplete="off" />
+  </div>
+  <div class="header-actions">
+    <a class="btn-github" href="https://github.com/priyadharsan17/Exploration" target="_blank" rel="noopener">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+      GitHub
+    </a>
+  </div>
+</header>
+
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<!-- ── Sidebar Navigation ────────────────────────────────────────────────── -->
+<nav class="sidebar" id="sidebar">
+  <div class="nav-section-label">Overview</div>
+  <a class="nav-link active" href="#overview" data-section="overview">
+    <span class="nav-icon">🏠</span> Introduction
+  </a>
+  <a class="nav-link" href="#prereq" data-section="prereq">
+    <span class="nav-icon">⚙️</span> Prerequisites
+  </a>
+
+  <div class="nav-section-label">Categories</div>
+  <a class="nav-link" href="#layouts" data-section="layouts">
+    <span class="nav-icon">🔲</span> Layouts
+    <span class="nav-count">3</span>
+  </a>
+  <a class="nav-link" href="#animations" data-section="animations">
+    <span class="nav-icon">✨</span> Animations
+    <span class="nav-count">2</span>
+  </a>
+  <a class="nav-link" href="#tables" data-section="tables">
+    <span class="nav-icon">📊</span> Tables
+    <span class="nav-count">1</span>
+  </a>
+  <a class="nav-link" href="#trees" data-section="trees">
+    <span class="nav-icon">🌳</span> Trees
+    <span class="nav-count">1</span>
+  </a>
+  <a class="nav-link" href="#models" data-section="models">
+    <span class="nav-icon">🔀</span> Models &amp; Proxy
+    <span class="nav-count">1</span>
+  </a>
+  <a class="nav-link" href="#navigation" data-section="navigation">
+    <span class="nav-icon">🧭</span> Navigation
+    <span class="nav-count">2</span>
+  </a>
+  <a class="nav-link" href="#charts" data-section="charts">
+    <span class="nav-icon">📈</span> Charts
+    <span class="nav-count">1</span>
+  </a>
+  <a class="nav-link" href="#interaction" data-section="interaction">
+    <span class="nav-icon">🖱️</span> Interaction
+    <span class="nav-count">1</span>
+  </a>
+
+  <div class="nav-section-label">Roadmap</div>
+  <a class="nav-link" href="#roadmap" data-section="roadmap">
+    <span class="nav-icon">🗺️</span> Coming Up
+  </a>
+</nav>
+
+<!-- ── Main Content ──────────────────────────────────────────────────────── -->
+<main class="main">
+
+  <!-- Hero -->
+  <section class="hero" id="overview">
+    <div class="hero-badge">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      Hands-on Learning Workspace
+    </div>
+    <h1>PySide6 + QML<br>Interactive Exploration</h1>
+    <p>A curated collection of standalone interactive explorers — one per Qt Quick concept. Run it, tweak the controls, observe the behaviour live.</p>
+    <div class="hero-stats">
+      <div class="hero-stat">
+        <span class="stat-num">12</span>
+        <span class="stat-label">Completed Explorers</span>
+      </div>
+      <div class="hero-stat">
+        <span class="stat-num">8</span>
+        <span class="stat-label">Concept Categories</span>
+      </div>
+      <div class="hero-stat">
+        <span class="stat-num">3</span>
+        <span class="stat-label">Planned Explorers</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Prerequisites -->
+  <section class="section" id="prereq">
+    <div class="prereq-box">
+      <div class="prereq-icon">⚙️</div>
+      <div>
+        <h3>Prerequisites</h3>
+        <p>Python 3.9+ and PySide6 6.x. Install the single dependency with:</p>
+        <code>pip install PySide6</code>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── LAYOUTS ─────────────────────────────────────────────────────────── -->
+  <section class="section" id="layouts">
+    <div class="section-header c-blue">
+      <div class="section-icon">🔲</div>
+      <div>
+        <h2>Layouts</h2>
+        <p>Qt Quick layout types — arrangement, spanning, alignment, sizing constraints</p>
+      </div>
+      <span class="section-count">3 explorers</span>
+    </div>
+    <div class="card-grid">
+
+      <div class="card c-blue">
+        <div class="card-header">
+          <div class="card-icon">⬛</div>
+          <div class="card-title-group">
+            <div class="card-title">GridLayout Explorer</div>
+            <div class="card-subtitle">Layouts/GridLayout</div>
+          </div>
+          <span class="card-badge badge-done">Done</span>
+        </div>
+        <p class="card-desc">Controls panel and playground live side by side in one window. Modify grid dimensions, flow direction, column/row spans, alignment, and size constraints in real time.</p>
+        <table class="concept-table">
+          <tr><th>Property</th><th>What it controls</th></tr>
+          <tr><td>columns / rows</td><td>Grid dimensions and wrap behaviour</td></tr>
+          <tr><td>columnSpacing / rowSpacing</td><td>Gaps between cells</td></tr>
+          <tr><td>flow</td><td>LeftToRight or TopToBottom fill order</td></tr>
+          <tr><td>layoutDirection</td><td>Mirror grid: LTR ↔ RTL</td></tr>
+          <tr><td>Layout.columnSpan / rowSpan</td><td>Merge cells across columns or rows</td></tr>
+          <tr><td>Layout.fillWidth / fillHeight</td><td>Expand cells to fill available space</td></tr>
+          <tr><td>Layout.alignment</td><td>Position within a cell slot</td></tr>
+          <tr><td>Layout.preferred/min/maxWidth/Height</td><td>Sizing constraints and hints</td></tr>
+        </table>
+        <div class="run-cmd">
+          <span class="prompt">$</span>
+          <span>cd Layouts/GridLayout &amp;&amp; python main.py</span>
+          <button class="copy-btn" onclick="copyCmd(this,'cd Layouts/GridLayout && python main.py')">Copy</button>
+        </div>
+        <div class="card-tags">
+          <span class="tag">GridLayout</span>
+          <span class="tag">columnSpan</span>
+          <span class="tag">rowSpan</span>
+          <span class="tag">flow</span>
+          <span class="tag">layoutDirection</span>
+        </div>
+      </div>
+
+      <div class="card c-blue">
+        <div class="card-header">
+          <div class="card-icon">📐</div>
+          <div class="card-title-group">
+            <div class="card-title">ColumnLayout Explorer</div>
+            <div class="card-subtitle">Layouts/ColumnLayout</div>
+          </div>
+          <span class="card-badge badge-done">Done</span>
+        </div>
+        <p class="card-desc">Controls open in a separate Properties window so the playground fills the entire screen — ideal for observing full-window stretch and fill behaviour with two windows side by side.</p>
+        <table class="concept-table">
+          <tr><th>Property</th><th>What it controls</th></tr>
+          <tr><td>spacing</td><td>Uniform gap between all children</td></tr>
+          <tr><td>layoutDirection</td><td>TopToBottom (default) or BottomToTop</td></tr>
+          <tr><td>Layout.fillWidth / fillHeight</td><td>Horizontal expand / share vertical space</td></tr>
+          <tr><td>Layout.alignment</td><td>Alignment within the column slot</td></tr>
+          <tr><td>Layout.topMargin … rightMargin</td><td>Per-cell directional margins</td></tr>
+        </table>
+        <div class="run-cmd">
+          <span class="prompt">$</span>
+          <span>cd Layouts/ColumnLayout &amp;&amp; python main.py</span>
+          <button class="copy-btn" onclick="copyCmd(this,'cd Layouts/ColumnLayout && python main.py')">Copy</button>
+        </div>
+        <div class="card-tags">
+          <span class="tag">ColumnLayout</span>
+          <span class="tag">Layout.*</span>
+          <span class="tag">Two-window setup</span>
+        </div>
+      </div>
+
+      <div class="card c-blue">
+        <div class="card-header">
+          <div class="card-icon">🖥️</div>
+          <div class="card-title-group">
+            <div class="card-title">IDE Multi-Panel Layout</div>
+            <div class="card-subtitle">Layouts/IDELayout</div>
+          </div>
+          <span class="card-badge badge-done">Done</span>
+        </div>
+        <p class="card-desc">A single window mimicking a real IDE: toolbar, activity bar, resizable side panel, tabbed editor, resizable bottom panel, and status bar — all draggable with the mouse.</p>
+        <table class="concept-table">
+          <tr><th>Concept</th><th>Where</th></tr>
+          <tr><td>SplitView (H &amp; V)</td><td>mainSplit, rightSplit dividers</td></tr>
+          <tr><td>SplitView.preferred/min/maxWidth</td><td>Panel sizing defaults and constraints</td></tr>
+          <tr><td>Custom handle delegate</td><td>SplitHandle.hovered / pressed → Behavior</td></tr>
+          <tr><td>Panel collapse</td><td>visible: false on activity bar icon toggle</td></tr>
+          <tr><td>StackLayout + tab bar</td><td>Side panel &amp; bottom panel content switching</td></tr>
+          <tr><td>TextArea inside ScrollView</td><td>Scrollable read-only code viewer</td></tr>
+        </table>
+        <div class="run-cmd">
+          <span class="prompt">$</span>
+          <span>cd Layouts/IDELayout &amp;&amp; python main.py</span>
+          <button class="copy-btn" onclick="copyCmd(this,'cd Layouts/IDELayout && python main.py')">Copy</button>
+        </div>
+        <div class="card-tags">
+          <span class="tag">SplitView</span>
+          <span class="tag">StackLayout</span>
+          <span class="tag">TabBar</span>
+          <span class="tag">Resizable panels</span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ── ANIMATIONS ──────────────────────────────────────────────────────── -->
+  <section class="section" id="animations">
+    <div class="section-header c-purple">
+      <div class="section-icon">✨</div>
+      <div>
+        <h2>Animations</h2>
+        <p>NumberAnimation, easing curves, ListView transitions, and Python signal → Behavior</p>
+      </div>
+      <span class="section-count">2 explorers</span>
+    </div>
+    <div class="card-grid">
+
+      <div class="card c-purple">
+        <div class="card-header">
+          <div class="card-icon">🎞️</div>
+          <div class="card-title-group">
+            <div class="card-title">Number Animation Explorer</div>
+            <div class="card-subtitle">Animations/NumberAnimation</div>
+          </div>
+          <span class="card-badge badge-done">Done</span>
+        </div>
+        <p class="card-desc">Four demo tiles plus an easing showcase strip. Controls open in a separate window covering 22 easing curves, duration, loop count, and all QML animation primitives.</p>
+        <table class="concept-table">
+          <tr><th>Demo</th><th>Technique</th></tr>
+          <tr><td>Tile A</td><td>Behavior on property (x, opacity, rotation)</td></tr>
+          <tr><td>Tile B</td><td>Standalone NumberAnimation — Play/Pause/Stop</td></tr>
+          <tr><td>Tile C</td><td>State + Transition (scale, color, rotation)</td></tr>
+          <tr><td>Tile D</td><td>Python Signal → Behavior (progress bar)</td></tr>
+          <tr><td>Strip</td><td>6 dots with different easing curves launched at once</td></tr>
+        </table>
+        <div class="run-cmd">
+          <span class="prompt">$</span>
+          <span>cd Animations/NumberAnimation &amp;&amp; python main.py</span>
+          <button class="copy-btn" onclick="copyCmd(this,'cd Animations/NumberAnimation && python main.py')">Copy</button>
+        </div>
+        <div class="card-tags">
+          <span class="tag">NumberAnimation</span>
+          <span class="tag">Behavior on</span>
+          <span class="tag">Easing curves</span>
+          <span class="tag">SequentialAnimation</span>
+          <span class="tag">State+Transition</span>
+        </div>
+      </div>
+
+      <div class="card c-purple">
+        <div class="card-header">
+          <div class="card-icon">📋</div>
+          <div class="card-title-group">
+            <div class="card-title">ListView Transitions Explorer</div>
+            <div class="card-subtitle">Animations/ListViewTransitions</div>
+          </div>
+          <span class="card-badge badge-done">Done</span>
+        </div>
+        <p class="card-desc">Single window: ListView on the left, controls + legend on the right. Status bar shows exactly which transition fired and why after every action.</p>
+        <table class="concept-table">
+          <tr><th>Transition</th><th>Triggered by</th></tr>
+          <tr><td>populate</td><td>Model assigned / reassigned to the view</td></tr>
+          <tr><td>add</td><td>ListModel.insert() / append()</td></tr>
+          <tr><td>remove</td><td>ListModel.remove() / clear()</td></tr>
+          <tr><td>displaced</td><td>Items that shift due to another item's add/remove</td></tr>
+          <tr><td>move</td><td>ListModel.move() — explicit reorder</td></tr>
+        </table>
+        <div class="run-cmd">
+          <span class="prompt">$</span>
+          <span>cd Animations/ListViewTransitions &amp;&amp; python main.py</span>
+          <button class="copy-btn" onclick="copyCmd(this,'cd Animations/ListViewTransitions && python main.py')">Copy</button>
+        </div>
+        <div class="card-tags">
+          <span class="tag">ListView</span>
+          <span class="tag">populate</span>
+          <span class="tag">add / remove</span>
+          <span class="tag">displaced</span>
+          <span class="tag">move</span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ── TABLES ──────────────────────────────────────────────────────────── -->
+  <section class="section" id="tables">
+    <div class="section-header c-green">
+      <div class="section-icon">📊</div>
+      <div>
+        <h2>Tables</h2>
+        <p>QAbstractTableModel, cell CRUD, reusable QML TableView component</p>
+      </div>
+      <span class="section-count">1 explorer</span>
+    </div>
+    <div class="card-grid">
+
+      <div class="card c-green">
+        <div class="card-header">
+          <div class="card-icon">🗃️</div>
+          <div class="card-title-group">
+            <div class="card-title">Table Explorer</div>
+            <div class="card-subtitle">Tables/TableExplorer</div>
+          </div>
+          <span class="card-badge badge-done">Done</span>
+        </div>
+        <p class="card-desc">Live editable employee table (Name · Department · Level · Salary · Since). Covers the full QAbstractTableModel API, A1-style cell references, CSV export, and a reusable SmartTable.qml component.</p>
+        <table class="concept-table">
+          <tr><th>Concept</th><th>Where</th></tr>
+          <tr><td>QAbstractTableModel</td><td>All 5 required overrides in table_backend.py</td></tr>
+          <tr><td>beginInsertRows / Cols</td><td>addRow, addColumn methods</td></tr>
+          <tr><td>dataChanged, headerDataChanged</td><td>setData, setColumnHeader, resetTable</td></tr>
+          <tr><td>TableView delegate</td><td>required property string display in SmartTable.qml</td></tr>
+          <tr><td>HorizontalHeaderView</td><td>syncView in SmartTable.qml</td></tr>
+          <tr><td>Qt.callLater</td><td>Avoiding binding loops on inline edit focus</td></tr>
+        </table>
+        <div class="run-cmd">
+          <span class="prompt">$</span>
+          <span>cd Tables/TableExplorer &amp;&amp; python main.py</span>
+          <button class="copy-btn" onclick="copyCmd(this,'cd Tables/TableExplorer && python main.py')">Copy</button>
+        </div>
+        <div class="card-tags">
+          <span class="tag">QAbstractTableModel</span>
+          <span class="tag">TableView</span>
+          <span class="tag">HorizontalHeaderView</span>
+          <span class="tag">Reusable component</span>
+          <span class="tag">@Slot</span>
+          <span class="tag">@Property</span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ── TREES ───────────────────────────────────────────────────────────── -->
+  <section class="section" id="trees">
+    <div class="section-header c-green">
+      <div class="section-icon">🌳</div>
+      <div>
+        <h2>Trees</h2>
+        <p>QAbstractItemModel, index()/parent() contract, hierarchical CRUD</p>
+      </div>
+      <span class="section-count">1 explorer</span>
+    </div>
+    <div class="card-grid">
+
+      <div class="card c-green">
+        <div class="card-header">
+          <div class="card-icon">🌲</div>
+          <div class="card-title-group">
+            <div class="card-title">TreeView Explorer</div>
+            <div class="card-subtitle">Trees/TreeViewExplorer</div>
+          </div>
+          <span class="card-badge badge-done">Done</span>
+        </div>
+        <p class="card-desc">Interactive expandable tree (5 categories, 4 leaves each) with full CRUD on nodes. Demonstrates the fundamental index()/parent() contract and custom role names for QML access.</p>
+        <table class="concept-table">
+          <tr><th>Concept</th><th>Where</th></tr>
+          <tr><td>QAbstractItemModel</td><td>All 5 required overrides in tree_backend.py</td></tr>
+          <tr><td>index() / parent() contract</td><td>createIndex with node pointer as internalPointer</td></tr>
+          <tr><td>roleNames()</td><td>Mapping custom roles to QML-accessible names</td></tr>
+          <tr><td>beginInsertRows / removeRows</td><td>addNode, removeNode (+ all descendants)</td></tr>
+          <tr><td>required property injection</td><td>Delegate block reads model roles</td></tr>
+          <tr><td>depth indentation</td><td>anchors.leftMargin: depth * 22 + 10</td></tr>
+          <tr><td>expandRecursively()</td><td>Controls panel View section</td></tr>
+        </table>
+        <div class="run-cmd">
+          <span class="prompt">$</span>
+          <span>cd Trees/TreeViewExplorer &amp;&amp; python main.py</span>
+          <button class="copy-btn" onclick="copyCmd(this,'cd Trees/TreeViewExplorer && python main.py')">Copy</button>
+        </div>
+        <div class="card-tags">
+          <span class="tag">QAbstractItemModel</span>
+          <span class="tag">TreeView</span>
+          <span class="tag">index()/parent()</span>
+          <span class="tag">createIndex</span>
+          <span class="tag">roleNames()</span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ── MODELS & PROXY ──────────────────────────────────────────────────── -->
+  <section class="section" id="models">
+    <div class="section-header c-cyan">
+      <div class="section-icon">🔀</div>
+      <div>
+        <h2>Models &amp; Proxy</h2>
+        <p>QSortFilterProxyModel, multi-criteria filtering, role-based sorting</p>
+      </div>
+      <span class="section-count">1 explorer</span>
+    </div>
+    <div class="card-grid">
+
+      <div class="card c-cyan">
+        <div class="card-header">
+          <div class="card-icon">🔍</div>
+          <div class="card-title-group">
+            <div class="card-title">SortFilter Explorer</div>
+            <div class="card-subtitle">Models/SortFilterExplorer</div>
+          </div>
+          <span class="card-badge badge-done">Done</span>
+        </div>
+        <p class="card-desc">Live-filtered, live-sorted item list (23 tech-ecosystem items, 5 categories). Demonstrates triple-criteria filtering, proxy-to-source row mapping for deletion, and bindable property counts.</p>
+        <table class="concept-table">
+          <tr><th>Concept</th><th>Where</th></tr>
+          <tr><td>QSortFilterProxyModel</td><td>FilterProxy in backend.py</td></tr>
+          <tr><td>filterAcceptsRow</td><td>Three independent criteria all must pass</td></tr>
+          <tr><td>lessThan</td><td>Role-based sort (str case-insensitive, int)</td></tr>
+          <tr><td>invalidateFilter()</td><td>Called in every filter slot</td></tr>
+          <tr><td>filteredCount / totalCount</td><td>@Property(notify=) bindings in header stats</td></tr>
+          <tr><td>mapToSource()</td><td>Proxy → source row mapping for deletion</td></tr>
+        </table>
+        <div class="run-cmd">
+          <span class="prompt">$</span>
+          <span>cd Models/SortFilterExplorer &amp;&amp; python main.py</span>
+          <button class="copy-btn" onclick="copyCmd(this,'cd Models/SortFilterExplorer && python main.py')">Copy</button>
+        </div>
+        <div class="card-tags">
+          <span class="tag">QSortFilterProxyModel</span>
+          <span class="tag">filterAcceptsRow</span>
+          <span class="tag">lessThan</span>
+          <span class="tag">mapToSource</span>
+          <span class="tag">Repeater</span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ── NAVIGATION ─────────────────────────────────────────────────────── -->
+  <section class="section" id="navigation">
+    <div class="section-header c-orange">
+      <div class="section-icon">🧭</div>
+      <div>
+        <h2>Navigation</h2>
+        <p>StackView push/pop, Drawer, SwipeView, TabBar navigation patterns</p>
+      </div>
+      <span class="section-count">2 explorers</span>
+    </div>
+    <div class="card-grid">
+
+      <div class="card c-orange">
+        <div class="card-header">
+          <div class="card-icon">📚</div>
+          <div class="card-title-group">
+            <div class="card-title">StackView Explorer</div>
+            <div class="card-subtitle">Navigation/StackViewExplorer</div>
+          </div>
+          <span class="card-badge badge-done">Done</span>
+        </div>
+        <p class="card-desc">Four named pages, six-transition system (Slide / Fade / Scale / None switchable at runtime), live stack depth / currentItem / busy readout, page lifecycle hooks.</p>
+        <table class="concept-table">
+          <tr><th>Concept</th><th>What it demonstrates</th></tr>
+          <tr><td>StackView.push(comp, props)</td><td>Push pages A–D; pass initial properties to D</td></tr>
+          <tr><td>StackView.pop() / pop(null)</td><td>Pop one level or pop all the way to root</td></tr>
+          <tr><td>StackView.replace()</td><td>Replace current page (no back entry created)</td></tr>
+          <tr><td>StackView.clear()</td><td>Reset stack to Page A</td></tr>
+          <tr><td>pushEnter/Exit / popEnter/Exit</td><td>Runtime-switchable transition presets</td></tr>
+          <tr><td>StackView.onActivated</td><td>Drives per-page status bar update</td></tr>
+        </table>
+        <div class="run-cmd">
+          <span class="prompt">$</span>
+          <span>cd Navigation/StackViewExplorer &amp;&amp; python main.py</span>
+          <button class="copy-btn" onclick="copyCmd(this,'cd Navigation/StackViewExplorer && python main.py')">Copy</button>
+        </div>
+        <div class="card-tags">
+          <span class="tag">StackView</span>
+          <span class="tag">push/pop/replace</span>
+          <span class="tag">Transitions</span>
+          <span class="tag">Page lifecycle</span>
+        </div>
+      </div>
+
+      <div class="card c-orange">
+        <div class="card-header">
+          <div class="card-icon">🗂️</div>
+          <div class="card-title-group">
+            <div class="card-title">Drawer · SwipeView · TabBar Explorer</div>
+            <div class="card-subtitle">Navigation/DrawerExplorer</div>
+          </div>
+          <span class="card-badge badge-done">Done</span>
+        </div>
+        <p class="card-desc">Hamburger app bar, Drawer nav panel, TabBar, SwipeView (4 pages). Drawer edge switchable at runtime (Left / Bottom), modal toggle, Overlay custom dim, interactive swipe toggle.</p>
+        <table class="concept-table">
+          <tr><th>Concept</th><th>What it demonstrates</th></tr>
+          <tr><td>Drawer.open() / close()</td><td>Hamburger button + panel buttons</td></tr>
+          <tr><td>Drawer.edge at runtime</td><td>Edge selector — Left or Bottom</td></tr>
+          <tr><td>Drawer.modal on/off</td><td>Controls dim overlay behaviour</td></tr>
+          <tr><td>Overlay.modal</td><td>Custom dim colour for the drawer overlay</td></tr>
+          <tr><td>SwipeView.currentIndex</td><td>Single source of truth for tabs, drawer, panel</td></tr>
+          <tr><td>TabBar underline animation</td><td>Behavior on width inside TabButton</td></tr>
+        </table>
+        <div class="run-cmd">
+          <span class="prompt">$</span>
+          <span>cd Navigation/DrawerExplorer &amp;&amp; python main.py</span>
+          <button class="copy-btn" onclick="copyCmd(this,'cd Navigation/DrawerExplorer && python main.py')">Copy</button>
+        </div>
+        <div class="card-tags">
+          <span class="tag">Drawer</span>
+          <span class="tag">SwipeView</span>
+          <span class="tag">TabBar</span>
+          <span class="tag">Overlay</span>
+          <span class="tag">Navigation pattern</span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ── CHARTS ─────────────────────────────────────────────────────────── -->
+  <section class="section" id="charts">
+    <div class="section-header c-red">
+      <div class="section-icon">📈</div>
+      <div>
+        <h2>Charts</h2>
+        <p>Custom Canvas 2D charts — Line, Bar, Pie/Donut — no QtCharts required</p>
+      </div>
+      <span class="section-count">1 explorer</span>
+    </div>
+    <div class="card-grid">
+
+      <div class="card c-red">
+        <div class="card-header">
+          <div class="card-icon">📉</div>
+          <div class="card-title-group">
+            <div class="card-title">Charts Explorer</div>
+            <div class="card-subtitle">Charts/ChartsExplorer</div>
+          </div>
+          <span class="card-badge badge-done">Done</span>
+        </div>
+        <p class="card-desc">Three Canvas 2D charts (Line / Bar / Pie) in a StackLayout. Live data fed from a Python QTimer via signals. Bezier-smoothed reference sine wave, pie hit-testing with atan2, donut cutout.</p>
+        <table class="concept-table">
+          <tr><th>Concept</th><th>Where</th></tr>
+          <tr><td>Python signal → Connections → requestPaint()</td><td>lineCanvas Connections block</td></tr>
+          <tr><td>Sliding window: splice(0, 1)</td><td>onNewLinePoint when array.length > 60</td></tr>
+          <tr><td>bezierCurveTo smoothing</td><td>Reference sine wave in lineCanvas.onPaint</td></tr>
+          <tr><td>Pie hit-testing</td><td>Math.atan2 + sweep in MouseArea.onClicked</td></tr>
+          <tr><td>Donut cutout</td><td>Counter-clockwise ctx.arc() when holeSize > 0</td></tr>
+          <tr><td>Object.assign copy-on-write</td><td>Slice explosion via explodedSet JS object</td></tr>
+        </table>
+        <div class="run-cmd">
+          <span class="prompt">$</span>
+          <span>cd Charts/ChartsExplorer &amp;&amp; python main.py</span>
+          <button class="copy-btn" onclick="copyCmd(this,'cd Charts/ChartsExplorer && python main.py')">Copy</button>
+        </div>
+        <div class="card-tags">
+          <span class="tag">Canvas</span>
+          <span class="tag">Context2D</span>
+          <span class="tag">onPaint / requestPaint</span>
+          <span class="tag">QTimer</span>
+          <span class="tag">Bezier curves</span>
+          <span class="tag">atan2 hit-test</span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ── INTERACTION ────────────────────────────────────────────────────── -->
+  <section class="section" id="interaction">
+    <div class="section-header c-pink">
+      <div class="section-icon">🖱️</div>
+      <div>
+        <h2>Interaction</h2>
+        <p>Drag &amp; Drop primitives — floating proxy, Drag attached, DropArea</p>
+      </div>
+      <span class="section-count">1 explorer</span>
+    </div>
+    <div class="card-grid">
+
+      <div class="card c-pink">
+        <div class="card-header">
+          <div class="card-icon">🃏</div>
+          <div class="card-title-group">
+            <div class="card-title">Drag &amp; Drop Explorer</div>
+            <div class="card-subtitle">Interaction/DragDropExplorer</div>
+          </div>
+          <span class="card-badge badge-done">Done</span>
+        </div>
+        <p class="card-desc">Kanban-style card board (Todo / In Progress / Done). A single root-level floating proxy rectangle is moved by each card's MouseArea via drag.target; DropArea on every column reorders the model on drop.</p>
+        <table class="concept-table">
+          <tr><th>Concept</th><th>Where</th></tr>
+          <tr><td>Floating proxy pattern</td><td>drag.target on single root-level Rectangle</td></tr>
+          <tr><td>Drag attached properties</td><td>active, keys, hotSpot, drop()</td></tr>
+          <tr><td>DropArea callbacks</td><td>onDropped, acceptProposedAction</td></tr>
+          <tr><td>preventStealing</td><td>Inside Flickable to avoid scroll conflicts</td></tr>
+          <tr><td>mapToItem</td><td>Cross-item coordinate mapping for proxy placement</td></tr>
+        </table>
+        <div class="run-cmd">
+          <span class="prompt">$</span>
+          <span>cd Interaction/DragDropExplorer &amp;&amp; python main.py</span>
+          <button class="copy-btn" onclick="copyCmd(this,'cd Interaction/DragDropExplorer && python main.py')">Copy</button>
+        </div>
+        <div class="card-tags">
+          <span class="tag">Drag</span>
+          <span class="tag">DropArea</span>
+          <span class="tag">drag.target</span>
+          <span class="tag">preventStealing</span>
+          <span class="tag">mapToItem</span>
+          <span class="tag">Kanban</span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ── ROADMAP ─────────────────────────────────────────────────────────── -->
+  <section class="section" id="roadmap">
+    <div class="section-header c-purple">
+      <div class="section-icon">🗺️</div>
+      <div>
+        <h2>Roadmap</h2>
+        <p>Planned explorers — coming up next</p>
+      </div>
+    </div>
+    <div class="card-grid">
+
+      <div class="card c-cyan">
+        <div class="card-header">
+          <div class="card-icon">🎨</div>
+          <div class="card-title-group">
+            <div class="card-title">Canvas Explorer</div>
+            <div class="card-subtitle">Interaction/CanvasExplorer</div>
+          </div>
+          <span class="card-badge badge-planned">Planned</span>
+        </div>
+        <p class="card-desc">Canvas, Context2D, drawing paths / shapes / text, requestPaint, animation loop.</p>
+        <div class="card-tags">
+          <span class="tag">Canvas</span>
+          <span class="tag">Context2D</span>
+          <span class="tag">Animation loop</span>
+        </div>
+      </div>
+
+      <div class="card c-green">
+        <div class="card-header">
+          <div class="card-icon">💾</div>
+          <div class="card-title-group">
+            <div class="card-title">Settings Explorer</div>
+            <div class="card-subtitle">Settings/SettingsExplorer</div>
+          </div>
+          <span class="card-badge badge-planned">Planned</span>
+        </div>
+        <p class="card-desc">QSettings from Python, Qt.labs.settings QML type, persist window geometry and user preferences across restarts.</p>
+        <div class="card-tags">
+          <span class="tag">QSettings</span>
+          <span class="tag">Settings QML</span>
+          <span class="tag">Persistence</span>
+        </div>
+      </div>
+
+      <div class="card c-orange">
+        <div class="card-header">
+          <div class="card-icon">⚡</div>
+          <div class="card-title-group">
+            <div class="card-title">Live Data / Concurrency Explorer</div>
+            <div class="card-subtitle">Concurrency/LiveDataExplorer</div>
+          </div>
+          <span class="card-badge badge-planned">Planned</span>
+        </div>
+        <p class="card-desc">QThread worker, thread-safe signal emission, live-updating QAbstractListModel, Python threading.Thread vs QThread.</p>
+        <div class="card-tags">
+          <span class="tag">QThread</span>
+          <span class="tag">Thread-safe signals</span>
+          <span class="tag">Live model update</span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+</main>
+
+<!-- ── Footer ───────────────────────────────────────────────────────────── -->
+<footer class="site-footer">
+  <span>PySide6 + QML Exploration · Python 3.9+ · PySide6 6.x</span>
+  <a href="https://github.com/priyadharsan17/Exploration" target="_blank" rel="noopener">View on GitHub →</a>
+</footer>
+
+<button class="back-top" id="backTop" aria-label="Back to top" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<!-- ── Script ────────────────────────────────────────────────────────────── -->
+<script>
+  // ── Copy command ────────────────────────────────────────────────────────
+  function copyCmd(btn, text) {
+    navigator.clipboard.writeText(text).then(() => {
+      const orig = btn.textContent;
+      btn.textContent = 'Copied!';
+      setTimeout(() => btn.textContent = orig, 1500);
+    });
+  }
+
+  // ── Hamburger / Sidebar ─────────────────────────────────────────────────
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('sidebarOverlay');
+  const hamburger = document.getElementById('hamburger');
+
+  hamburger.addEventListener('click', () => {
+    sidebar.classList.toggle('open');
+    overlay.classList.toggle('open');
+  });
+  overlay.addEventListener('click', () => {
+    sidebar.classList.remove('open');
+    overlay.classList.remove('open');
+  });
+
+  // ── Active nav on scroll ─────────────────────────────────────────────────
+  const sections = Array.from(document.querySelectorAll('.section, .hero'));
+  const navLinks = Array.from(document.querySelectorAll('.nav-link[data-section]'));
+
+  function updateActiveNav() {
+    const scrollY = window.scrollY + 80;
+    let current = 'overview';
+    for (const sec of sections) {
+      if (sec.offsetTop <= scrollY) current = sec.id;
+    }
+    navLinks.forEach(l => l.classList.toggle('active', l.dataset.section === current));
+  }
+
+  window.addEventListener('scroll', updateActiveNav, { passive: true });
+  updateActiveNav();
+
+  // Close sidebar on nav click (mobile)
+  navLinks.forEach(l => l.addEventListener('click', () => {
+    sidebar.classList.remove('open');
+    overlay.classList.remove('open');
+  }));
+
+  // ── Back to top button ───────────────────────────────────────────────────
+  const backTop = document.getElementById('backTop');
+  window.addEventListener('scroll', () => {
+    backTop.classList.toggle('visible', window.scrollY > 300);
+  }, { passive: true });
+
+  // ── Global search ────────────────────────────────────────────────────────
+  const searchInput = document.getElementById('globalSearch');
+
+  searchInput.addEventListener('input', () => {
+    const q = searchInput.value.trim().toLowerCase();
+
+    // Clear all existing highlights
+    document.querySelectorAll('.search-highlight').forEach(el => {
+      const parent = el.parentNode;
+      parent.replaceChild(document.createTextNode(el.textContent), el);
+      parent.normalize();
+    });
+
+    document.querySelectorAll('.no-results').forEach(el => el.remove());
+
+    if (!q) {
+      document.querySelectorAll('.card').forEach(c => c.style.display = '');
+      return;
+    }
+
+    document.querySelectorAll('.card').forEach(card => {
+      const text = card.textContent.toLowerCase();
+      card.style.display = text.includes(q) ? '' : 'none';
+    });
+
+    // Show "no results" per grid
+    document.querySelectorAll('.card-grid').forEach(grid => {
+      const visible = Array.from(grid.querySelectorAll('.card')).filter(c => c.style.display !== 'none');
+      if (visible.length === 0) {
+        const msg = document.createElement('p');
+        msg.className = 'no-results';
+        msg.style.display = 'block';
+        msg.textContent = 'No results for "' + searchInput.value + '"';
+        grid.appendChild(msg);
+      }
+    });
+  });
+
+  searchInput.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      searchInput.value = '';
+      searchInput.dispatchEvent(new Event('input'));
+      searchInput.blur();
+    }
+  });
+</script>
+
+</body>
+</html>
