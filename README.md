@@ -17,8 +17,10 @@ Exploration/
 │   └── ListViewTransitions/      ← ListView transition explorer  (single window)
 ├── Tables/
 │   └── TableExplorer/            ← Table CRUD explorer           (single window)
-└── Trees/
-    └── TreeViewExplorer/         ← TreeView CRUD explorer        (single window)
+├── Trees/
+│   └── TreeViewExplorer/         ← TreeView CRUD explorer        (single window)
+└── Models/
+    └── SortFilterExplorer/       ← SortFilter proxy explorer     (single window)
 ```
 
 ---
@@ -300,3 +302,48 @@ Starts with a seeded 5-category technology stack tree (Frontend · Backend · Da
 | `required property` injection from model roles and `TreeView` | Delegate block |
 | `depth` for dynamic left-margin indentation | `anchors.leftMargin: depth * 22 + 10` |
 | `toggleExpanded(row)`, `expandRecursively()`, `collapseRecursively()` | Controls panel |
+
+---
+
+### `Models/SortFilterExplorer` — SortFilter Explorer
+
+> Single window: a live-filtered, live-sorted item list on the left, controls panel on the right.  Covers `QSortFilterProxyModel`, multi-criteria `filterAcceptsRow`, role-based `lessThan`, bindable proxy properties, and proxy-to-source row mapping.
+
+**Run:**
+```bash
+cd Models/SortFilterExplorer
+python main.py
+```
+
+Starts with 23 seeded tech-ecosystem items across five categories, sorted by name ascending.
+
+**Two files:**
+
+| File | Role |
+|---|---|
+| `backend.py` | `ItemModel` (`QAbstractListModel`) source + `FilterProxy` (`QSortFilterProxyModel`) subclass |
+| `main.py` | Entry point — seeds data, exposes proxy as `proxyModel` context property |
+| `SortFilterExplorer.qml` | Explorer window — card list + controls panel + stats header + status bar |
+
+**Controls panel:**
+
+| Section | Operations |
+|---|---|
+| Search | Live substring filter on name (`onTextChanged` → `setSearchText`) |
+| Category | Pill buttons — All + 5 categories; highlighted with category color |
+| Status Filter | Active-only toggle → `setActiveOnly` |
+| Sort by | Name / Score / Category selector + ascending/descending toggle |
+| Add Item | Name · Score (0–100) · category picker · active toggle → `addItem` |
+| Remove Selected | Deletes via `removeProxyRow` (maps proxy row → source row with `mapToSource`) |
+
+**Key concepts demonstrated:**
+
+| Concept | Where |
+|---|---|
+| `QSortFilterProxyModel` as proxy between source model and view | `backend.py` |
+| `filterAcceptsRow` — three independent criteria all must pass | `FilterProxy` |
+| `lessThan` — role-based custom sort (str case-insensitive, int) | `FilterProxy` |
+| `invalidateFilter()` to re-evaluate all rows | Every filter slot |
+| `filteredCount` / `totalCount` as `@Property(notify=)` bindings | Header stats bar |
+| `mapToSource(self.index(proxy_row, 0))` for proxy → source deletion | `removeProxyRow` |
+| `Repeater` for dynamic pill button groups | Category filter + Add Item picker |
