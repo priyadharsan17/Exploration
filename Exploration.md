@@ -72,7 +72,7 @@ Each entry links to the sub-project folder and notes the key concepts covered or
 
 | # | Sub-project | Status | Key Concepts |
 |---|---|---|---|
-| 11 | `Charts/ChartsExplorer` | ✅ | `QtCharts`, `ChartView`, `LineSeries`, `BarSeries`, `PieSeries`, live data via Python timer, `QXYSeries.append` from Python |
+| 11 | `Charts/ChartsExplorer` | ✅ | Custom Canvas 2D charts (no QtCharts), `onPaint` / `requestPaint`, JS array live data, bezier smoothing, pie hit-test with `atan2`, `Object.assign` copy-on-write set |
 
 ---
 
@@ -80,7 +80,7 @@ Each entry links to the sub-project folder and notes the key concepts covered or
 
 | # | Sub-project | Status | Key Concepts |
 |---|---|---|---|
-| 12 | `Interaction/DragDropExplorer` | 🔜 | `DragHandler`, `DropArea`, `Drag` attached properties, model reordering on drop (Kanban-style) |
+| 12 | [`Interaction/DragDropExplorer`](Interaction/DragDropExplorer/) | ✅ | Floating proxy pattern (`drag.target`), `Drag` attached (`active`, `keys`, `hotSpot`, `drop()`), `DropArea` (`onDropped`, `acceptProposedAction`), `preventStealing` in `Flickable`, `mapToItem` for cross-item coords |
 | 13 | `Interaction/CanvasExplorer`   | 💡 | `Canvas`, `Context2D`, drawing paths/shapes/text, `requestPaint`, animation loop |
 
 ---
@@ -109,9 +109,10 @@ Each entry links to the sub-project folder and notes the key concepts covered or
 ✅ 6            Flat model (Table)
 ✅ 7            Tree model
 ✅ 8            Proxy model (SortFilter)
-💡 9 → 10       Navigation (StackView, Drawer)
-💡 11           Charts
-💡 12 → 13      Interaction (DragDrop, Canvas)
+✅ 9 → 10       Navigation (StackView, Drawer)
+✅ 11           Charts
+✅ 12           Interaction (DragDrop)
+💡 13           Interaction (Canvas drawing)
 💡 14           Persistence
 💡 15           Concurrency / Real-time
 ```

@@ -479,3 +479,47 @@ python main.py
 | Pie hit-testing: `Math.atan2` + sweep accumulation | `MouseArea.onClicked` in pie chart |
 | Donut cutout via counter-clockwise `ctx.arc()` | `pieCanvas.onPaint` when `holeSize > 0` |
 | Slice explosion via `explodedSet` JS object (`Object.assign` copy-on-write) | Explode All / click handler |
+
+---
+
+### `Interaction/DragDropExplorer` — Drag & Drop Explorer
+
+Kanban-style card board demonstrating QML's drag-and-drop primitives. Cards live in three `ListModel`s (Todo / In Progress / Done). A single root-level **floating proxy** rectangle is moved by each card's `MouseArea` via `drag.target`; `DropArea` on every column accepts the drop and reorders the model.
+
+```bash
+cd Interaction/DragDropExplorer
+python main.py
+```
+
+**Three files:**
+
+| File | Role |
+|---|---|
+| `drag_drop_backend.py` | `DragDropBackend(QObject)` — assigns a random accent color; emits `cardAdded(title, colIndex, color)` and `boardReset` |
+| `main.py` | Entry point — exposes `backend` context property |
+| `DragDropExplorer.qml` | Three-column Kanban board with floating proxy drag and `DropArea` per column |
+
+**Controls panel:**
+
+| Control | Operation |
+|---|---|
+| Drag card to a column | Moves card: `remove(srcIdx)` from source, `append(…)` to target |
+| Drag to same column | No-op (guard: `if (srcCol === targetCol) return`) |
+| Click × | `ListModel.remove(index)` — inline remove, no drag |
+| Add Card | `backend.addCard(title, colIndex)` → Python picks color → `cardAdded` → model `append` |
+| Reset Board | `backend.resetBoard()` → `boardReset` → QML clears and re-populates all three models |
+
+**Key concepts demonstrated:**
+
+| Concept | Where |
+|---|---|
+| Floating proxy pattern (`drag.target: floatingCard`) | Card's `MouseArea` |
+| `Drag.active: visible` activates the DnD system | `floatingCard` |
+| `Drag.keys` + `DropArea.keys` filter valid targets | `"kanban"` on both |
+| `Drag.hotSpot` = proxy centre for hit-testing | `floatingCard` |
+| `DropArea.onDropped` — model update + `acceptProposedAction()` | Each column's `DropArea` |
+| `Drag.drop()` fires `onDropped` synchronously on release | Card's `MouseArea.onReleased` |
+| `preventStealing: true` beats `Flickable` grab | Card's drag `MouseArea` |
+| `mapToItem(root.contentItem, …)` for cross-item coordinates | `onPressed` positioning |
+| Source card dims to 20 % opacity while dragging | `opacity` binding on `dragSourceIndex` |
+| Column highlight on `DropArea.onEntered` | `colRect.dropHighlight` + `Behavior on border.color` |
