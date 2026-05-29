@@ -15,8 +15,10 @@ Exploration/
 ├── Animations/
 │   ├── NumberAnimation/          ← Number animation explorer     (two windows)
 │   └── ListViewTransitions/      ← ListView transition explorer  (single window)
-└── Tables/
-    └── TableExplorer/            ← Table CRUD explorer           (single window)
+├── Tables/
+│   └── TableExplorer/            ← Table CRUD explorer           (single window)
+└── Trees/
+    └── TreeViewExplorer/         ← TreeView CRUD explorer        (single window)
 ```
 
 ---
@@ -253,3 +255,48 @@ Opens a 1280 × 800 window (resizable, minimum 920 × 580).
 | `StackLayout` + tab bar | Switches content for both the side panel and the bottom panel |
 | `TextArea` inside `ScrollView` | Horizontally scrollable read-only code viewer |
 | `ListModel` + interactive `TextInput` | Console panel appends typed commands to the log |
+
+---
+
+### `Trees/TreeViewExplorer` — TreeView Explorer
+
+> Single window: interactive expandable tree on the left, controls panel on the right.  Covers `QAbstractItemModel`, the `index()` / `parent()` contract, custom role names, and full CRUD on a live tree.
+
+**Run:**
+```bash
+cd Trees/TreeViewExplorer
+python main.py
+```
+
+Starts with a seeded 5-category technology stack tree (Frontend · Backend · Database · DevOps · Mobile), each with four leaf items.
+
+**Three files:**
+
+| File | Role |
+|---|---|
+| `tree_backend.py` | `QAbstractItemModel` subclass — `TreeNode` + `TreeModel` with full CRUD |
+| `main.py` | Entry point — seeds data, exposes model as `treeModel` context property |
+| `TreeViewExplorer.qml` | Explorer window — tree view + controls panel + status bar |
+
+**Controls panel:**
+
+| Section | Operations |
+|---|---|
+| Selected Node | Shows current node name and stable id |
+| Add Node | Add child under selected node; add new top-level node |
+| Rename | Rename the selected node in-place |
+| Remove | Delete the selected node and all its descendants |
+| Node Info | Get full path · child count · leaf check |
+| View | Expand All (`expandRecursively()`) · Collapse All (`collapseRecursively()`) |
+
+**Key concepts demonstrated:**
+
+| Concept | Where |
+|---|---|
+| `QAbstractItemModel` with all 5 required overrides | `tree_backend.py` |
+| `index()` / `parent()` contract using `createIndex` with node pointer | `tree_backend.py` |
+| `roleNames()` mapping custom roles to QML-accessible names | `tree_backend.py` |
+| `beginInsertRows` / `endInsertRows` and remove equivalents | `addNode`, `removeNode` |
+| `required property` injection from model roles and `TreeView` | Delegate block |
+| `depth` for dynamic left-margin indentation | `anchors.leftMargin: depth * 22 + 10` |
+| `toggleExpanded(row)`, `expandRecursively()`, `collapseRecursively()` | Controls panel |
